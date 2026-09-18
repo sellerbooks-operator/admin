@@ -895,9 +895,19 @@
 
 }
 #ownerNameLogin:focus{border-color:var(--primary)!important;box-shadow:0 0 0 3px rgba(37,99,235,.08)}
-</style><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/exceljs/dist/exceljs.min.js"></script></head><body><section id="loginPage"><div class="login-card"><div class="login-brand"><div class="logo">SB</div><div><strong>SellerBooks</strong><div style="font-size:11px;color:#64748b;margin-top:3px">IMPORT PENJUALAN</div></div></div><div id="loginStep1"><h1>Login Operator</h1><p>Masuk menggunakan Gmail Operator untuk mengajukan akses ke SellerBooks.</p><button class="google-button" type="button" onclick="loginGoogle()">🔐 Masuk dengan Google</button><div class="login-note">Gunakan Gmail Operator yang berbeda dari Gmail Owner. Setelah login, permintaan akses akan menunggu persetujuan Core Adiimasa.</div></div><div id="loginStep2" style="display:none"><div style="font-size:42px;text-align:center;margin-bottom:10px">⏳</div><h1 style="text-align:center">Menunggu Persetujuan</h1><p style="text-align:center">Akun Gmail Operator Anda sudah login, tetapi belum mendapat persetujuan dari <strong>Core Adiimasa</strong>.</p><div id="operatorApprovalEmail" class="login-note" style="text-align:center;font-weight:700"></div><button class="google-button" type="button" onclick="checkOperatorApproval()">🔄 Cek Persetujuan</button><button type="button" onclick="sellerBooksLogout()" style="width:100%;height:44px;margin-top:10px;border:0;background:#f1f5f9;border-radius:10px;cursor:pointer">Keluar</button><div id="operatorApprovalMessage" class="login-note">Silakan tunggu sampai Core Adiimasa menyetujui akun Operator ini.</div></div><div id="loginStep3" style="display:none"><div style="font-size:42px;text-align:center;margin-bottom:10px">👤</div><h1>Nama Pemilik</h1><p>Persetujuan Operator sudah aktif. Sekarang masukkan <strong>Nama Pemilik</strong> yang sesuai dengan data Owner SellerBooks.</p><label style="display:block;font-size:13px;font-weight:700;margin-top:22px;margin-bottom:8px">Nama Pemilik</label><input id="ownerNameLogin" type="text" autocomplete="organization" placeholder="Contoh: Test store" style="width:100%;height:52px;border:1px solid #cbd5e1;border-radius:12px;padding:0 14px;font-size:15px;outline:none"><button class="google-button" type="button" onclick="resolveOwnerWorkspace()">➡️ Masuk ke Import Penjualan</button><button type="button" onclick="sellerBooksLogout()" style="width:100%;height:44px;margin-top:10px;border:0;background:#f1f5f9;border-radius:10px;cursor:pointer">Keluar</button><div id="ownerNameMessage" class="login-note">Nama Pemilik harus sesuai dengan data yang terdaftar di SellerBooks.</div></div></div></section><div id="app"><header class="operator-topbar"><div class="operator-brand"><div class="logo">SB</div><div>SellerBooks <span style="font-weight:500;color:#64748b">• Import Penjualan</span></div></div><div class="operator-user"><span id="operatorEmail"></span><button class="logout" onclick="sellerBooksLogout()">Keluar</button></div></header><main class="app-content"><div class="operator-banner">🔒 <strong>Mode Operator Import.</strong> Data yang tersedia di aplikasi ini hanya yang diperlukan untuk proses import. Dashboard, laba/rugi, HPP, margin, dan laporan tidak tersedia di aplikasi operator.</div><!-- =====================================
+</style><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script>
+(function(){
+    function loadScript(src){return new Promise(function(resolve,reject){var s=document.createElement("script");s.src=src;s.async=true;s.onload=resolve;s.onerror=reject;document.head.appendChild(s);});}
+    window.sellerBooksEnsureExcelJS=async function(){
+        if(typeof ExcelJS!=="undefined")return true;
+        try{await loadScript("https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js");}
+        catch(e){try{await loadScript("https://unpkg.com/exceljs@4.4.0/dist/exceljs.min.js");}catch(e2){return false;}}
+        return typeof ExcelJS!=="undefined";
+    };
+})();
+</script>
+</head><body><section id="loginPage"><div class="login-card"><div class="login-brand"><div class="logo">SB</div><div><strong>SellerBooks</strong><div style="font-size:11px;color:#64748b;margin-top:3px">IMPORT PENJUALAN</div></div></div><div id="loginStep1"><h1>Login Operator</h1><p>Masuk menggunakan Gmail Operator untuk mengajukan akses ke SellerBooks.</p><button class="google-button" type="button" onclick="loginGoogle()">🔐 Masuk dengan Google</button><div class="login-note">Gunakan Gmail Operator yang berbeda dari Gmail Owner. Setelah login, permintaan akses akan menunggu persetujuan Core Adiimasa.</div></div><div id="loginStep2" style="display:none"><div style="font-size:42px;text-align:center;margin-bottom:10px">⏳</div><h1 style="text-align:center">Menunggu Persetujuan</h1><p style="text-align:center">Akun Gmail Operator Anda sudah login, tetapi belum mendapat persetujuan dari <strong>Core Adiimasa</strong>.</p><div id="operatorApprovalEmail" class="login-note" style="text-align:center;font-weight:700"></div><button class="google-button" type="button" onclick="checkOperatorApproval()">🔄 Cek Persetujuan</button><button type="button" onclick="sellerBooksLogout()" style="width:100%;height:44px;margin-top:10px;border:0;background:#f1f5f9;border-radius:10px;cursor:pointer">Keluar</button><div id="operatorApprovalMessage" class="login-note">Silakan tunggu sampai Core Adiimasa menyetujui akun Operator ini.</div></div><div id="loginStep3" style="display:none"><div style="font-size:42px;text-align:center;margin-bottom:10px">👤</div><h1>Nama Pemilik</h1><p>Persetujuan Operator sudah aktif. Sekarang masukkan <strong>Nama Pemilik</strong> yang sesuai dengan data Owner SellerBooks.</p><label style="display:block;font-size:13px;font-weight:700;margin-top:22px;margin-bottom:8px">Nama Pemilik</label><input id="ownerNameLogin" type="text" autocomplete="organization" placeholder="Contoh: Test store" style="width:100%;height:52px;border:1px solid #cbd5e1;border-radius:12px;padding:0 14px;font-size:15px;outline:none"><button class="google-button" type="button" onclick="resolveOwnerWorkspace()">➡️ Masuk ke Import Penjualan</button><button type="button" onclick="sellerBooksLogout()" style="width:100%;height:44px;margin-top:10px;border:0;background:#f1f5f9;border-radius:10px;cursor:pointer">Keluar</button><div id="ownerNameMessage" class="login-note">Nama Pemilik harus sesuai dengan data yang terdaftar di SellerBooks.</div></div></div></section><div id="app"><header class="operator-topbar"><div class="operator-brand"><div class="logo">SB</div><div>SellerBooks <span style="font-weight:500;color:#64748b">• Import Penjualan</span></div></div><div class="operator-user"><span id="operatorEmail"></span><button class="logout" onclick="sellerBooksLogout()">Keluar</button></div></header><main class="app-content"><div class="operator-banner">🔒 <strong>Mode Operator Import.</strong> Data yang tersedia di aplikasi ini hanya yang diperlukan untuk proses import. Dashboard, laba/rugi, HPP, margin, dan laporan tidak tersedia di aplikasi operator.</div><!-- =====================================
      IMPORT PENJUALAN
 ===================================== -->
 
@@ -1599,6 +1609,121 @@ function findBestColumn(headers,keywords){
 
 }
 function findAliasColumn(headers,aliases){const r=findBestColumn(headers,aliases||[]);return r&&r.column?r.column:null;}
+const SKU_KEYWORDS = [
+
+    "nomor referensi sku",
+
+    "seller sku",
+
+    "product sku",
+
+    "merchant sku",
+
+    "sku produk",
+
+    "kode produk",
+
+    "kode barang",
+
+    "item sku",
+
+    "product code",
+
+    "seller_sku",
+
+    "product_sku"
+
+];
+
+
+
+/*
+========================================================
+DAFTAR KATA QTY
+========================================================
+*/
+
+const QTY_KEYWORDS = [
+
+    "qty",
+
+    "quantity",
+
+    "jumlah",
+
+    "jumlah produk",
+
+    "kuantitas",
+
+    "jumlah pesanan",
+
+    "qty pesanan",
+
+    "quantity ordered",
+
+    "product quantity",
+    
+    "total barang",
+
+    "item quantity"
+
+];
+
+
+
+/* =====================================================
+   MARKETPLACE FILE FINGERPRINT + PACKING ENGINE
+===================================================== */
+const SALES_MARKETPLACE_RULES={
+    Shopee:{
+        required:["no. pesanan","nomor referensi sku","jumlah"],
+        packingAliases:["no. pesanan","no. resi"],
+        orderAliases:["no. pesanan"],
+        priceAliases:["subtotal pesanan"],
+        dateAliases:["waktu pesanan dibuat"]
+    },
+
+    TikTok:{
+        required:["order id","seller sku","quantity"],
+        packingAliases:["order id","tracking id"],
+        orderAliases:["order id"],
+        priceAliases:["sku subtotal after discount","sku unit original price"],
+        dateAliases:["created time"]
+    },
+
+    Blibli:{
+        required:["no. order","merchant sku","total barang"],
+        packingAliases:["no. order","no. awb"],
+        orderAliases:["no. order"],
+        priceAliases:["harga produk","total harga produk"],
+        dateAliases:["tanggal order"]
+    },
+
+    Toco:{
+        required:["invoice number","sku","jumlah produk"],
+        packingAliases:["no. resi pesanan"],
+        orderAliases:["invoice number"],
+        priceAliases:["harga setelah diskon","total harga produk"],
+        dateAliases:["waktu pesanan dibuat"]
+    },
+
+    Lazada:{
+        required:["orderitemid","seller sku","ordernumber"],
+        packingAliases:["orderitemid","trackingcode"],
+        orderAliases:["ordernumber"],
+        priceAliases:["paidprice","unitprice","itemprice"],
+        dateAliases:["ordercreatedat","createdat","order date"]
+    },
+
+    Tokopedia:{
+        required:["nomor invoice","nomor sku","jumlah produk dibeli"],
+        packingAliases:["no resi / kode booking"],
+        orderAliases:["nomor invoice"],
+        priceAliases:["harga produk","harga"],
+        dateAliases:["tanggal pembayaran"]
+    }
+};
+
 function detectSalesMarketplace(headers,fileName){const h=headers.map(normalizeHeader);let best=null,scoreBest=0;Object.keys(SALES_MARKETPLACE_RULES).forEach(function(name){const rule=SALES_MARKETPLACE_RULES[name];let score=0;rule.required.forEach(function(k){if(h.indexOf(normalizeHeader(k))>=0)score+=3;});if(name==="Lazada"&&h.indexOf("lazadaid")>=0)score+=4;if(name==="TikTok"&&h.indexOf("tracking id")>=0)score+=2;if(name==="Shopee"&&h.indexOf("no. pesanan")>=0)score+=4;if(name==="Tokopedia"&&h.indexOf("nomor invoice")>=0)score+=4;if(name==="Blibli"&&h.indexOf("no. order")>=0)score+=4;if(name==="Toco"&&h.indexOf("invoice number")>=0)score+=4;if(score>scoreBest){scoreBest=score;best=name;}});if(!best){const n=String(fileName||"").toLowerCase();["Shopee","TikTok","Blibli","Toco","Lazada","Tokopedia"].some(function(x){if(n.includes(x.toLowerCase())){best=x;return true;}return false;});}return {marketplace:best,score:scoreBest};}
 function getPackingColumn(data){const rule=SALES_MARKETPLACE_RULES[data.marketplace];if(!rule)return null;for(let i=0;i<rule.packingAliases.length;i++){const c=findAliasColumn(data.headers,[rule.packingAliases[i]]);if(c)return c;}return null;}
 function getFirstValue(row,headers,aliases){const c=findAliasColumn(headers,aliases);if(!c)return "";const i=headers.indexOf(c);return i>=0?row[i]:"";}
@@ -3480,30 +3605,6 @@ const sellerBooksStorage={
 
 function formatRupiah(value){return "Rp " + (Number(value)||0).toLocaleString("id-ID");}
 function getIndonesiaDateString(value){const d=new Date(value||Date.now());return new Intl.DateTimeFormat("en-CA",{timeZone:"Asia/Jakarta",year:"numeric",month:"2-digit",day:"2-digit"}).format(d);}
-async function sellerBooksEnsureXLSX(){
-  if(typeof XLSX!=="undefined") return true;
-  function loadScript(src){
-    return new Promise(function(resolve,reject){
-      var s=document.createElement("script");
-      s.src=src;
-      s.async=true;
-      s.onload=resolve;
-      s.onerror=reject;
-      document.head.appendChild(s);
-    });
-  }
-  try{
-    await loadScript("https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js");
-  }catch(e){
-    try{
-      await loadScript("https://unpkg.com/xlsx@0.18.5/dist/xlsx.full.min.js");
-    }catch(e2){
-      alert("Library Excel tidak dapat dimuat. Periksa koneksi internet lalu coba lagi.");
-      return false;
-    }
-  }
-  return typeof XLSX!=="undefined";
-}
 function sellerBooksOpenFilePicker(id){const el=document.getElementById(id);if(!el)return;try{el.value="";if(el.showPicker){el.showPicker();return}}catch(e){}el.click();}
 
 async function operatorLoadWorkspace(ownerName){
@@ -3515,17 +3616,6 @@ async function operatorLoadWorkspace(ownerName){
   window.stores=sellerBooksOperatorWorkspace.stores||[];
   window.products=sellerBooksOperatorWorkspace.products||[];
   const who=document.getElementById("operatorEmail"); if(who)who.textContent=(sellerBooksAuthUser?.email||"")+" • "+(sellerBooksOperatorWorkspace.owner_name||ownerName);
-}
-async function operatorLoadSavedWorkspace(){
-  const {data,error}=await sellerBooksSupabase.rpc("sellerbooks_operator_workspace");
-  if(error) throw error;
-  sellerBooksOperatorWorkspace=data||null;
-  if(!sellerBooksOperatorWorkspace || !sellerBooksOperatorWorkspace.owner_user_id) throw new Error("OPERATOR_NOT_ASSIGNED");
-  window.marketplaces=sellerBooksOperatorWorkspace.marketplaces||[];
-  window.stores=sellerBooksOperatorWorkspace.stores||[];
-  window.products=sellerBooksOperatorWorkspace.products||[];
-  const who=document.getElementById("operatorEmail");
-  if(who) who.textContent=(sellerBooksAuthUser?.email||"")+" • "+(sellerBooksOperatorWorkspace.owner_name||"");
 }
 function operatorShowApp(){document.getElementById("loginPage").style.display="none";document.getElementById("app").style.display="block";}
 function operatorShowLogin(){
@@ -3557,24 +3647,7 @@ async function checkOperatorApproval(){
     if(error)throw error;
     const status=String(data?.status||"NOT_REQUESTED").toUpperCase();
     if(status==="APPROVED" && data?.is_active){
-      /*
-        If this Gmail has already completed level 2 before, the Owner
-        workspace is persisted in Supabase. Reuse it so refresh/logout-login
-        returns directly to Import Penjualan. A missing workspace means this
-        is a fresh approval and the Owner name must be entered once.
-      */
-      try{
-        await operatorLoadSavedWorkspace();
-        if(msg)msg.textContent="Persetujuan aktif. Membuka Import Penjualan...";
-        operatorShowApp();
-        return;
-      }catch(savedErr){
-        const savedCode=String(savedErr?.message||"");
-        if(!savedCode.includes("OPERATOR_NOT_ASSIGNED")){
-          console.error(savedErr);
-        }
-      }
-      if(msg)msg.textContent="Persetujuan sudah aktif. Silakan masukkan Nama Pemilik.";
+      if(msg)msg.textContent="Persetujuan sudah aktif. Silakan lanjut ke tingkat 2: masukkan Nama Pemilik.";
       showOwnerNameStep();
       return;
     }
