@@ -3478,6 +3478,11 @@ const sellerBooksStorage={
 
 function formatRupiah(value){return "Rp " + (Number(value)||0).toLocaleString("id-ID");}
 function getIndonesiaDateString(value){const d=new Date(value||Date.now());return new Intl.DateTimeFormat("en-CA",{timeZone:"Asia/Jakarta",year:"numeric",month:"2-digit",day:"2-digit"}).format(d);}
+async function sellerBooksEnsureXLSX(){
+  if(typeof XLSX !== "undefined") return true;
+  alert("Modul pembaca Excel belum siap. Silakan refresh halaman lalu coba lagi.");
+  return false;
+}
 function sellerBooksOpenFilePicker(id){const el=document.getElementById(id);if(!el)return;try{el.value="";if(el.showPicker){el.showPicker();return}}catch(e){}el.click();}
 
 async function operatorLoadWorkspace(ownerName){
@@ -3489,6 +3494,17 @@ async function operatorLoadWorkspace(ownerName){
   window.stores=sellerBooksOperatorWorkspace.stores||[];
   window.products=sellerBooksOperatorWorkspace.products||[];
   const who=document.getElementById("operatorEmail"); if(who)who.textContent=(sellerBooksAuthUser?.email||"")+" • "+(sellerBooksOperatorWorkspace.owner_name||ownerName);
+}
+async function operatorLoadSavedWorkspace(){
+  const {data,error}=await sellerBooksSupabase.rpc("sellerbooks_operator_workspace");
+  if(error) throw error;
+  sellerBooksOperatorWorkspace=data||null;
+  if(!sellerBooksOperatorWorkspace || !sellerBooksOperatorWorkspace.owner_user_id) throw new Error("OPERATOR_NOT_ASSIGNED");
+  window.marketplaces=sellerBooksOperatorWorkspace.marketplaces||[];
+  window.stores=sellerBooksOperatorWorkspace.stores||[];
+  window.products=sellerBooksOperatorWorkspace.products||[];
+  const who=document.getElementById("operatorEmail");
+  if(who) who.textContent=(sellerBooksAuthUser?.email||"")+" • "+(sellerBooksOperatorWorkspace.owner_name||"");
 }
 function operatorShowApp(){document.getElementById("loginPage").style.display="none";document.getElementById("app").style.display="block";}
 function operatorShowLogin(){
@@ -3520,7 +3536,24 @@ async function checkOperatorApproval(){
     if(error)throw error;
     const status=String(data?.status||"NOT_REQUESTED").toUpperCase();
     if(status==="APPROVED" && data?.is_active){
-      if(msg)msg.textContent="Persetujuan sudah aktif. Silakan lanjut ke tingkat 2: masukkan Nama Pemilik.";
+      /*
+        If this Gmail has already completed level 2 before, the Owner
+        workspace is persisted in Supabase. Reuse it so refresh/logout-login
+        returns directly to Import Penjualan. A missing workspace means this
+        is a fresh approval and the Owner name must be entered once.
+      */
+      try{
+        await operatorLoadSavedWorkspace();
+        if(msg)msg.textContent="Persetujuan aktif. Membuka Import Penjualan...";
+        operatorShowApp();
+        return;
+      }catch(savedErr){
+        const savedCode=String(savedErr?.message||"");
+        if(!savedCode.includes("OPERATOR_NOT_ASSIGNED")){
+          console.error(savedErr);
+        }
+      }
+      if(msg)msg.textContent="Persetujuan sudah aktif. Silakan masukkan Nama Pemilik.";
       showOwnerNameStep();
       return;
     }
