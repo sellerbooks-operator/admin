@@ -2806,21 +2806,147 @@ function resetSalesImport(){
 
     }
 
-    /* =========================================
-       BUKA MODAL PREVIEW
-    ========================================= */
 
-const marketplaceElement=document.getElementById("detectedMarketplaceName");
-    if(marketplaceElement) marketplaceElement.value=data.marketplace?data.marketplace+" ✓":"Tidak dikenali";
-    populateSalesStoreAccounts();
+    /* RESET BIAYA PACKING */
 
-document.getElementById(
-    "salesPreviewModal"
-).classList.add(
-    "active"
-);
 
-updatePreviewColumns();
+    /* RESET HASIL PACKING */
+    const packingCount =
+        document.getElementById(
+            "uniquePackingCount"
+        );
+
+    if(packingCount){
+        packingCount.innerText = "0";
+    }
+
+
+    const packingTotal =
+        document.getElementById(
+            "totalPackingImportCost"
+        );
+
+    if(packingTotal){
+        packingTotal.innerText = "Rp 0";
+    }
+
+
+    const packingInfo =
+        document.getElementById(
+            "packingIdentifierInfo"
+        );
+
+    if(packingInfo){
+
+        packingInfo.innerText =
+            "Identitas packing akan dipilih otomatis sesuai marketplace.";
+
+    }
+
+
+    /* RESET STATUS VALIDASI */
+    const validation =
+        document.getElementById(
+            "previewValidationStatus"
+        );
+
+    if(validation){
+
+        validation.className =
+            "preview-validation-status";
+
+        validation.innerText =
+            "Pilih kolom SKU dan QTY untuk melanjutkan.";
+
+    }
+
+
+    /* RESET STATUS ANALISIS */
+    const analysisStatus =
+        document.getElementById(
+            "analysisStatus"
+        );
+
+    if(analysisStatus){
+
+        analysisStatus.innerText =
+            "Menunggu Analisis";
+
+    }
+
+
+    /* RESET INFO FILE */
+    const fileName =
+        document.getElementById(
+            "analysisFileName"
+        );
+
+    if(fileName){
+        fileName.innerText = "-";
+    }
+
+
+    const fileType =
+        document.getElementById(
+            "analysisFileType"
+        );
+
+    if(fileType){
+        fileType.innerText = "-";
+    }
+
+
+    const rowCount =
+        document.getElementById(
+            "analysisRowCount"
+        );
+
+    if(rowCount){
+        rowCount.innerText = "0";
+    }
+
+
+    /* RESET TOMBOL LANJUTKAN */
+    const continueButton =
+        document.getElementById(
+            "continueSalesImportButton"
+        );
+
+    if(continueButton){
+        continueButton.disabled = true;
+    }
+
+
+    /* RESET TOMBOL KONFIRMASI */
+    const confirmButton =
+        document.getElementById(
+            "confirmSalesColumnsButton"
+        );
+
+    if(confirmButton){
+        confirmButton.disabled = true;
+    }
+
+
+    /* RESET PREVIEW */
+    const previewFileName =
+        document.getElementById(
+            "previewFileName"
+        );
+
+    if(previewFileName){
+        previewFileName.innerText = "-";
+    }
+
+
+    const previewRowCount =
+        document.getElementById(
+            "previewRowCount"
+        );
+
+    if(previewRowCount){
+        previewRowCount.innerText = "0";
+    }
 
 }
 function updatePreviewColumns(){
@@ -3630,6 +3756,19 @@ async function operatorLoadWorkspace(ownerName){
   window.products=sellerBooksOperatorWorkspace.products||[];
   const who=document.getElementById("operatorEmail"); if(who)who.textContent=(sellerBooksAuthUser?.email||"")+" • "+(sellerBooksOperatorWorkspace.owner_name||ownerName);
 }
+
+async function operatorRestoreSavedWorkspace(){
+  const {data,error}=await sellerBooksSupabase.rpc("sellerbooks_operator_workspace");
+  if(error) throw error;
+  sellerBooksOperatorWorkspace=data||null;
+  if(!sellerBooksOperatorWorkspace || !sellerBooksOperatorWorkspace.owner_user_id) throw new Error("OPERATOR_NOT_ASSIGNED");
+  window.marketplaces=sellerBooksOperatorWorkspace.marketplaces||[];
+  window.stores=sellerBooksOperatorWorkspace.stores||[];
+  window.products=sellerBooksOperatorWorkspace.products||[];
+  const who=document.getElementById("operatorEmail");
+  if(who)who.textContent=(sellerBooksAuthUser?.email||"")+" • "+(sellerBooksOperatorWorkspace.owner_name||"");
+}
+
 function operatorShowApp(){document.getElementById("loginPage").style.display="none";document.getElementById("app").style.display="block";}
 function operatorShowLogin(){
   document.getElementById("loginPage").style.display="flex";
@@ -3665,31 +3804,30 @@ async function checkOperatorApproval(){
          menyelesaikan identitas, refresh/logout-login tidak meminta
          Nama Pemilik lagi. Identitas diambil dari binding server.
       */
-      const savedOwnerName=String(data?.owner_name||"").trim();
-      if(savedOwnerName){
-        if(msg)msg.textContent="Persetujuan aktif. Memulihkan akses Import Penjualan...";
-        try{
-          await operatorLoadWorkspace(savedOwnerName);
-          operatorShowApp();
-          return;
-        }catch(resolveError){
-          console.error("Pemulihan workspace Operator gagal:",resolveError);
-          const resolveCode=String(resolveError?.message||"");
-          /* Owner sudah tidak ditemukan/aktif: kembali ke tingkat Nama Pemilik. */
-          if(resolveCode.includes("OWNER_NAME_NOT_FOUND") || resolveCode.includes("OWNER_NAME_NOT_UNIQUE")){
-            showOwnerNameStep();
-            const ownerMsg=document.getElementById("ownerNameMessage");
-            if(ownerMsg)ownerMsg.textContent="Nama Pemilik yang tersimpan tidak lagi tersedia. Masukkan Nama Pemilik yang terdaftar di SellerBooks.";
-            return;
-          }
-          if(resolveCode.includes("OPERATOR_CORE_APPROVAL_REQUIRED")){
-            if(msg)msg.textContent="Operator belum disetujui Core Adiimasa.";
-            return;
-          }
-          /* Jangan memaksa user mengisi nama jika masalahnya hanya jaringan/server. */
-          if(msg)msg.textContent="Persetujuan aktif, tetapi workspace belum dapat dipulihkan. Silakan tekan Cek Persetujuan lagi.";
+      if(msg)msg.textContent="Persetujuan aktif. Memulihkan akses Import Penjualan...";
+      try{
+        await operatorRestoreSavedWorkspace();
+        operatorShowApp();
+        return;
+      }catch(resolveError){
+        console.error("Pemulihan workspace Operator gagal:",resolveError);
+        const resolveCode=String(resolveError?.message||"");
+        if(resolveCode.includes("OPERATOR_NOT_ASSIGNED")){
+          showOwnerNameStep();
           return;
         }
+        if(resolveCode.includes("OWNER_SELLERBOOKS_DATA_NOT_FOUND") || resolveCode.includes("OWNER_NAME_NOT_FOUND")){
+          showOwnerNameStep();
+          const ownerMsg=document.getElementById("ownerNameMessage");
+          if(ownerMsg)ownerMsg.textContent="Nama Pemilik yang tersimpan tidak lagi tersedia. Masukkan Nama Pemilik yang terdaftar di SellerBooks.";
+          return;
+        }
+        if(resolveCode.includes("OPERATOR_CORE_APPROVAL_REQUIRED")){
+          if(msg)msg.textContent="Operator belum disetujui Core Adiimasa.";
+          return;
+        }
+        if(msg)msg.textContent="Persetujuan aktif, tetapi workspace belum dapat dipulihkan. Silakan tekan Cek Persetujuan lagi.";
+        return;
       }
       if(msg)msg.textContent="Persetujuan sudah aktif. Silakan lanjut ke tingkat 2: masukkan Nama Pemilik.";
       showOwnerNameStep();
@@ -3760,16 +3898,454 @@ async function sellerBooksLogout(){await sellerBooksSupabase.auth.signOut();sell
 sellerBooksSupabase.auth.onAuthStateChange((event,session)=>{if(session?.user){sellerBooksAuthUser=session.user;operatorShowLogin();setTimeout(()=>checkOperatorApproval(),0);}else{sellerBooksAuthUser=null;operatorShowLogin();}});
 
 function populateSalesStoreAccounts(){
- const select=document.getElementById("salesStoreAccount"),info=document.getElementById("salesStoreAccountInfo"); if(!select||!currentSalesImport)return;
- select.innerHTML='<option value="">-- Pilih Akun Toko --</option>';
- const detected=String(currentSalesImport.marketplace||"").toLowerCase();
- const mp=(marketplaces||[]).find(x=>String(x.id||"").toLowerCase()===detected||String(x.name||"").toLowerCase()===detected||(detected==="tiktok"&&/tiktok shop|tiktokshop/.test(String(x.name||"").toLowerCase())));
- currentSalesImport.marketplaceId=mp?.id||null;
- const list=(stores||[]).filter(x=>x.status==="active"&&String(x.marketplaceId||"")===String(currentSalesImport.marketplaceId||""));
- list.forEach(store=>{const o=document.createElement("option");o.value=store.id;o.textContent=store.name+(store.code?" • "+store.code:"");select.appendChild(o);});
- if(info)info.textContent=list.length?list.length+" akun toko aktif tersedia.":"Belum ada akun toko aktif untuk marketplace ini.";
+
+    const select =
+        document.getElementById(
+            "salesStoreAccount"
+        );
+
+    const info =
+        document.getElementById(
+            "salesStoreAccountInfo"
+        );
+
+    if(
+        !select ||
+        !currentSalesImport
+    ){
+        return;
+    }
+
+
+    /* =========================================
+       RESET DROPDOWN
+    ========================================= */
+
+    select.innerHTML =
+        '<option value="">-- Pilih Akun Toko --</option>';
+
+
+    /* =========================================
+       AMBIL MARKETPLACE TERDETEKSI
+    ========================================= */
+
+    const detectedMarketplace =
+        String(
+            currentSalesImport.marketplace || ""
+        )
+        .trim()
+        .toLowerCase();
+
+
+    /*
+       DETEKSI MENGGUNAKAN NAMA SINGKAT,
+       SEDANGKAN DATABASE MARKETPLACE
+       BISA MENGGUNAKAN NAMA LENGKAP.
+    */
+
+    const marketplaceAlias = {
+
+        "shopee":
+            "shopee",
+
+        "tiktok":
+            "tiktok",
+
+        "tiktok shop":
+            "tiktok",
+
+        "tokopedia":
+            "tokopedia",
+
+        "lazada":
+            "lazada",
+
+        "blibli":
+            "blibli",
+
+        "toco":
+            "toco"
+
+    };
+
+
+    const normalizedMarketplace =
+        marketplaceAlias[
+            detectedMarketplace
+        ] || detectedMarketplace;
+
+
+    /* =========================================
+       CARI MARKETPLACE BERDASARKAN ID / NAMA
+    ========================================= */
+
+    const mp =
+        marketplaces.find(function(item){
+
+            const itemId =
+                String(
+                    item.id || ""
+                )
+                .trim()
+                .toLowerCase();
+
+            const itemName =
+                String(
+                    item.name || ""
+                )
+                .trim()
+                .toLowerCase();
+
+            const sameMarketplace =
+                itemId === normalizedMarketplace
+                ||
+                itemName === detectedMarketplace
+                ||
+                (
+                    normalizedMarketplace === "tiktok" &&
+                    (
+                        itemId === "tiktok" ||
+                        itemName === "tiktok shop" ||
+                        itemName === "tiktokshop"
+                    )
+                );
+
+            if(!sameMarketplace){
+                return false;
+            }
+
+            /* Jika ada marketplace duplikat, pilih yang memiliki
+               akun toko aktif agar dropdown Import tidak kosong. */
+            return stores.some(function(store){
+                return store.status === "active" &&
+                    String(store.marketplaceId || "") === String(item.id || "");
+            });
+
+        }) ||
+        marketplaces.find(function(item){
+            const itemId = String(item.id || "").trim().toLowerCase();
+            const itemName = String(item.name || "").trim().toLowerCase();
+
+            return itemId === normalizedMarketplace
+                || itemName === detectedMarketplace
+                || (normalizedMarketplace === "tiktok" &&
+                    (itemId === "tiktok" || itemName === "tiktok shop" || itemName === "tiktokshop"));
+        });
+
+
+    /* =========================================
+       SIMPAN MARKETPLACE ID
+    ========================================= */
+
+    currentSalesImport.marketplaceId =
+        mp
+        ? mp.id
+        : null;
+
+
+    /* =========================================
+       JIKA MARKETPLACE TIDAK DITEMUKAN
+    ========================================= */
+
+    if(
+        !currentSalesImport.marketplaceId
+    ){
+
+        if(info){
+
+            info.innerText =
+                "Marketplace tidak ditemukan di database.";
+
+            info.style.color =
+                "#dc2626";
+
+        }
+
+        return;
+    }
+
+
+    /* =========================================
+       CARI AKUN TOKO
+       SESUAI MARKETPLACE
+    ========================================= */
+
+    const list =
+        stores.filter(function(store){
+
+            return (
+
+                store.status === "active"
+
+                &&
+
+                String(
+                    store.marketplaceId
+                ) ===
+                String(
+                    currentSalesImport.marketplaceId
+                )
+
+            );
+
+        });
+
+
+    /* =========================================
+       MASUKKAN AKUN TOKO KE DROPDOWN
+    ========================================= */
+
+    list.forEach(function(store){
+
+        const option =
+            document.createElement(
+                "option"
+            );
+
+        option.value =
+            store.id;
+
+        option.textContent =
+            store.name +
+            (
+                store.code
+                ? " • " + store.code
+                : ""
+            );
+
+        select.appendChild(
+            option
+        );
+
+    });
+
+
+    /* =========================================
+       INFO AKUN TOKO
+    ========================================= */
+
+    if(info){
+
+        if(list.length){
+
+            info.innerText =
+                list.length +
+                " akun toko aktif tersedia.";
+
+            info.style.color =
+                "";
+
+        }else{
+
+            info.innerText =
+                "Belum ada akun toko aktif untuk marketplace ini.";
+
+            info.style.color =
+                "#dc2626";
+
+        }
+
+    }
+
 }
 function getMasterProductBySku(sku){const n=String(sku||"").trim().toLowerCase();return (products||[]).find(p=>String(p.sku||"").trim().toLowerCase()===n)||null;}
+function continueSalesImport(){
+
+    if(!currentSalesImport){
+
+        alert(
+            "Belum ada file yang dianalisis."
+        );
+
+        return;
+
+    }
+
+    openSalesPreview();
+
+}
+
+function openSalesPreview(){
+
+
+    /*
+    PASTIKAN ADA DATA FILE
+    */
+
+    if(!currentSalesImport){
+
+        return;
+
+    }
+
+
+    /*
+    AMBIL DATA HASIL ANALISIS FASE 1
+    */
+
+    const data = currentSalesImport;
+
+
+
+    /* =========================================
+       TAMPILKAN NAMA FILE
+    ========================================= */
+
+    document.getElementById(
+        "previewFileName"
+    ).innerText = data.fileName;
+
+
+
+    /* =========================================
+       TAMPILKAN JUMLAH BARIS DATA
+    ========================================= */
+
+    document.getElementById(
+        "previewRowCount"
+    ).innerText =
+
+        data.dataRows.length
+        .toLocaleString("id-ID");
+
+
+
+    /* =========================================
+       AMBIL DROPDOWN SKU
+    ========================================= */
+
+    const skuSelect =
+
+        document.getElementById(
+            "manualSkuColumn"
+        );
+
+
+
+    /* =========================================
+       AMBIL DROPDOWN QTY
+    ========================================= */
+
+    const qtySelect =
+
+        document.getElementById(
+            "manualQtyColumn"
+        );
+
+
+
+    /* =========================================
+       KOSONGKAN DROPDOWN SEBELUM DIISI ULANG
+    ========================================= */
+
+    skuSelect.innerHTML =
+
+        '<option value="">-- Pilih Kolom SKU --</option>';
+
+
+    qtySelect.innerHTML =
+
+        '<option value="">-- Pilih Kolom QTY --</option>';
+
+
+
+    /* =========================================
+       MASUKKAN SEMUA HEADER FILE
+       KE DROPDOWN
+    ========================================= */
+
+    data.headers.forEach(function(header){
+
+
+        /*
+        OPTION UNTUK SKU
+        */
+
+        const skuOption =
+
+            document.createElement("option");
+
+
+        skuOption.value = header;
+
+        skuOption.textContent = header;
+
+
+        skuSelect.appendChild(
+            skuOption
+        );
+
+
+
+        /*
+        OPTION UNTUK QTY
+        */
+
+        const qtyOption =
+
+            document.createElement("option");
+
+
+        qtyOption.value = header;
+
+        qtyOption.textContent = header;
+
+
+        qtySelect.appendChild(
+            qtyOption
+        );
+
+
+    });
+
+
+
+    /* =========================================
+       AUTO PILIH SKU
+       JIKA SUDAH DITEMUKAN ENGINE
+    ========================================= */
+
+    if(data.skuColumn){
+
+        skuSelect.value =
+            data.skuColumn;
+
+    }
+
+
+
+    /* =========================================
+       AUTO PILIH QTY
+       JIKA SUDAH DITEMUKAN ENGINE
+    ========================================= */
+
+    if(data.qtyColumn){
+
+        qtySelect.value =
+            data.qtyColumn;
+
+    }
+
+
+
+    /* =========================================
+       BUKA MODAL PREVIEW
+    ========================================= */
+
+const marketplaceElement=document.getElementById("detectedMarketplaceName");
+    if(marketplaceElement) marketplaceElement.value=data.marketplace?data.marketplace+" ✓":"Tidak dikenali";
+    populateSalesStoreAccounts();
+
+document.getElementById(
+    "salesPreviewModal"
+).classList.add(
+    "active"
+);
+
+updatePreviewColumns();
+
+}
+
 function saveSalesImportData(){
  if(!currentSalesImport)return null;
  const storeId=document.getElementById("salesStoreAccount")?.value||"";
