@@ -895,6 +895,68 @@
 
 }
 #ownerNameLogin:focus{border-color:var(--primary)!important;box-shadow:0 0 0 3px rgba(37,99,235,.08)}
+
+/* =====================================================
+   BUTTON STYLE — BLUE SELLERBOOKS
+   CSS ONLY — TIDAK MENGUBAH HTML / JAVASCRIPT
+===================================================== */
+.primary-button,
+.secondary-button {
+    appearance:none;
+    -webkit-appearance:none;
+    border:1px solid var(--primary);
+    background:var(--primary);
+    color:#fff;
+    border-radius:10px;
+    padding:10px 16px;
+    min-height:40px;
+    font-size:13px;
+    font-weight:700;
+    line-height:1.2;
+    cursor:pointer;
+    transition:background .18s ease, border-color .18s ease, transform .18s ease, box-shadow .18s ease, opacity .18s ease;
+    box-shadow:0 2px 6px rgba(37,99,235,.16);
+}
+
+.primary-button:hover,
+.secondary-button:hover {
+    background:var(--primary-dark);
+    border-color:var(--primary-dark);
+    box-shadow:0 5px 12px rgba(37,99,235,.22);
+    transform:translateY(-1px);
+}
+
+.primary-button:active,
+.secondary-button:active {
+    transform:translateY(0);
+    box-shadow:0 2px 5px rgba(37,99,235,.18);
+}
+
+.primary-button:focus-visible,
+.secondary-button:focus-visible {
+    outline:none;
+    box-shadow:0 0 0 3px rgba(37,99,235,.20), 0 4px 10px rgba(37,99,235,.18);
+}
+
+.primary-button:disabled,
+.secondary-button:disabled {
+    background:#93b4f5;
+    border-color:#93b4f5;
+    color:#fff;
+    opacity:.65;
+    cursor:not-allowed;
+    transform:none;
+    box-shadow:none;
+}
+
+/* Tombol pilih file tetap biru dan rapi di dalam area upload */
+.import-upload-box .primary-button {
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    min-width:110px;
+}
+
 </style><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <script>
 (function(){
