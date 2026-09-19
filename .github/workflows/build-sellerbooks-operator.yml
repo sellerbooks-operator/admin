@@ -12,6 +12,7 @@ permissions:
 jobs:
   build-operator:
     runs-on: windows-latest
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -21,7 +22,7 @@ jobs:
         with:
           dotnet-version: '8.0.x'
 
-      - name: Prepare professional SellerBooks Operator icon
+      - name: Prepare professional SellerBooks icon
         shell: pwsh
         run: |
           choco install imagemagick --no-progress -y
@@ -49,9 +50,7 @@ jobs:
         shell: pwsh
         run: |
           New-Item -ItemType Directory -Force windows-operator/artifacts | Out-Null
-          $iscc = Join-Path ${env:ProgramFiles(x86)} "Inno Setup 6\ISCC.exe"
-          if (-not (Test-Path $iscc)) { throw "Inno Setup compiler not found: $iscc" }
-          & $iscc "windows-operator/installer/SellerBooks-Operator.iss"
+          & "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" "windows-operator/installer/SellerBooks-Operator.iss"
 
       - name: Upload installer
         uses: actions/upload-artifact@v4
