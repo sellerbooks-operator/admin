@@ -49,7 +49,9 @@ jobs:
         shell: pwsh
         run: |
           New-Item -ItemType Directory -Force windows-operator/artifacts | Out-Null
-          & "$env:ProgramFiles(x86)\Inno Setup 6\ISCC.exe" "windows-operator/installer/SellerBooks-Operator.iss"
+          $iscc = Join-Path ${env:ProgramFiles(x86)} "Inno Setup 6\ISCC.exe"
+          if (-not (Test-Path $iscc)) { throw "Inno Setup compiler not found: $iscc" }
+          & $iscc "windows-operator/installer/SellerBooks-Operator.iss"
 
       - name: Upload installer
         uses: actions/upload-artifact@v4
