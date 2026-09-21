@@ -1330,6 +1330,49 @@
             </div>
 
 
+
+
+            <!-- HARGA JUAL KHUSUS LAZADA -->
+
+            <div
+                class="recognition-card"
+                id="lazadaPriceRecognitionCard"
+                style="display:none;"
+            >
+
+                <div class="recognition-title">
+
+                    <span class="recognition-icon">
+
+                        💰
+
+                    </span>
+
+                    Harga Jual Recognition
+
+                </div>
+
+
+                <div
+                    class="recognition-result"
+                    id="lazadaPriceRecognitionResult"
+                >
+
+                    Belum ditemukan
+
+                </div>
+
+
+                <div
+                    class="recognition-confidence"
+                    id="lazadaPriceRecognitionConfidence"
+                >
+
+                    Menunggu analisis
+
+                </div>
+
+            </div>
         </div>
 
 
@@ -2429,6 +2472,19 @@ async function analyzeSalesFile(input){
                 };
             }
 
+            /* KHUSUS SHOPEE KILAT: jika tidak ada kolom Jumlah, 1 baris SKU = 1 pcs. */
+            const detectedShopee =
+                detectSalesMarketplace(
+                    cleanHeaders,
+                    file.name
+                ).marketplace === "Shopee";
+            if(detectedShopee && !qtyResult.column){
+                qtyResult = {
+                    column:"__SHOPEE_QTY_PER_ROW__",
+                    score:100
+                };
+            }
+
 
 
             /*
@@ -2734,6 +2790,10 @@ function renderSalesAnalysis(){
         qtyResultElement.innerText = "sellerSku • hitung kemunculan";
         qtyConfidenceElement.innerText = "Khusus Lazada • QTY = jumlah kemunculan sellerSku";
     }
+    else if(data.marketplace === "Shopee" && data.qtyColumn === "__SHOPEE_QTY_PER_ROW__"){
+        qtyResultElement.innerText = "1 pcs / baris";
+        qtyConfidenceElement.innerText = "Khusus Shopee • file tidak memiliki kolom Jumlah, setiap baris SKU = 1 pcs";
+    }
     else if(data.qtyColumn){
 
 
@@ -2765,6 +2825,45 @@ function renderSalesAnalysis(){
 
             "Kolom QTY belum dikenali";
 
+    }
+
+
+
+    /* =====================================================
+       HARGA JUAL RECOGNITION - KHUSUS LAZADA
+       Sumber wajib: kolom AV = unitPrice
+    ===================================================== */
+
+    const lazadaPriceCard =
+        document.getElementById("lazadaPriceRecognitionCard");
+
+    const lazadaPriceResult =
+        document.getElementById("lazadaPriceRecognitionResult");
+
+    const lazadaPriceConfidence =
+        document.getElementById("lazadaPriceRecognitionConfidence");
+
+    if(data.marketplace === "Lazada"){
+
+        if(lazadaPriceCard){
+            lazadaPriceCard.style.display = "";
+        }
+
+        if(lazadaPriceResult){
+            lazadaPriceResult.innerText =
+                "unitPrice • Kolom AV";
+        }
+
+        if(lazadaPriceConfidence){
+            lazadaPriceConfidence.innerText =
+                "Khusus Lazada • Harga Jual = unitPrice kolom AV";
+        }
+
+    }else{
+
+        if(lazadaPriceCard){
+            lazadaPriceCard.style.display = "none";
+        }
     }
 
 
@@ -3212,10 +3311,13 @@ function updatePreviewColumns(){
 
     const isLazadaImport =
         currentSalesImport.marketplace === "Lazada";
+    const isShopeeQtyPerRow =
+        currentSalesImport.marketplace === "Shopee" &&
+        currentSalesImport.qtyColumn === "__SHOPEE_QTY_PER_ROW__";
 
     if(
     !skuColumn ||
-    (!qtyColumn && !isLazadaImport)
+    (!qtyColumn && !isLazadaImport && !isShopeeQtyPerRow)
 ){
 
 
@@ -3246,6 +3348,7 @@ function updatePreviewColumns(){
 
     if(
     !isLazadaImport &&
+    !isShopeeQtyPerRow &&
     skuColumn === qtyColumn
 ){
 
@@ -3387,7 +3490,9 @@ function renderPreviewTable(
     qtyHeader.innerText =
         (currentSalesImport && currentSalesImport.marketplace === "Lazada")
             ? "QTY • sellerSku"
-            : (qtyColumn || "QTY");
+            : (currentSalesImport && currentSalesImport.marketplace === "Shopee" && currentSalesImport.qtyColumn === "__SHOPEE_QTY_PER_ROW__")
+                ? "QTY • 1 pcs/baris"
+                : (qtyColumn || "QTY");
 
 
 
@@ -3430,7 +3535,7 @@ function renderPreviewTable(
     */
 
     const qtyIndex =
-        data.marketplace === "Lazada"
+        (data.marketplace === "Lazada" || data.qtyColumn === "__SHOPEE_QTY_PER_ROW__")
             ? -1
             : data.headers.indexOf(qtyColumn);
 
@@ -3589,7 +3694,9 @@ const previewRows = cleanRows;
             qtyCell.innerText =
                 data.marketplace === "Lazada"
                     ? "1"
-                    : (qtyIndex >= 0 ? row[qtyIndex] || "" : "");
+                    : (data.marketplace === "Shopee" && data.qtyColumn === "__SHOPEE_QTY_PER_ROW__")
+                        ? "1"
+                        : (qtyIndex >= 0 ? row[qtyIndex] || "" : "");
 
 
 
@@ -4438,6 +4545,12 @@ function openSalesPreview(){
         lazadaQtyOption.textContent = "sellerSku • hitung jumlah kemunculan";
         qtySelect.appendChild(lazadaQtyOption);
     }
+    if(data.marketplace === "Shopee" && data.qtyColumn === "__SHOPEE_QTY_PER_ROW__"){
+        const shopeeQtyOption = document.createElement("option");
+        shopeeQtyOption.value = "__SHOPEE_QTY_PER_ROW__";
+        shopeeQtyOption.textContent = "Shopee • 1 pcs per baris (otomatis)";
+        qtySelect.appendChild(shopeeQtyOption);
+    }
 
 
     /* =========================================
@@ -4545,15 +4658,15 @@ function saveSalesImportData(){
 
  const rows=getCleanSalesRows(currentSalesImport), skuIndex=currentSalesImport.headers.indexOf(currentSalesImport.skuColumn), qtyIndex=currentSalesImport.headers.indexOf(currentSalesImport.qtyColumn), rule=SALES_MARKETPLACE_RULES[currentSalesImport.marketplace];
  const importedAt=new Date().toISOString(), reportDate=getIndonesiaDateString(importedAt);
- const transactions=rows.map((row,rowIndex)=>({marketplace:currentSalesImport.marketplace,marketplaceId:currentSalesImport.marketplaceId,storeId,storeName:store.name,sku:skuIndex>=0?String(row[skuIndex]||"").trim():"",qty:currentSalesImport.marketplace==="Lazada"?1:(qtyIndex>=0?parseSalesNumber(row[qtyIndex]):0),salesAmount:getSalesAmountOperator(row,currentSalesImport),orderId:rule?getFirstValue(row,currentSalesImport.headers,rule.orderAliases):"",packingId:currentSalesImport.marketplace==="Lazada"&&rule?getFirstValue(row,currentSalesImport.headers,rule.packingAliases):"",sourceRowIndex:currentSalesImport.marketplace==="Lazada"?rowIndex:null,transactionDate:getSalesTransactionDate(row,currentSalesImport),reportDate,importedAt}));
+ const transactions=rows.map((row,rowIndex)=>({marketplace:currentSalesImport.marketplace,marketplaceId:currentSalesImport.marketplaceId,storeId,storeName:store.name,sku:skuIndex>=0?String(row[skuIndex]||"").trim():"",qty:currentSalesImport.marketplace==="Lazada"?1:(currentSalesImport.marketplace==="Shopee"&&currentSalesImport.qtyColumn==="__SHOPEE_QTY_PER_ROW__"?1:(qtyIndex>=0?parseSalesNumber(row[qtyIndex]):0)),salesAmount:getSalesAmountOperator(row,currentSalesImport),orderId:rule?getFirstValue(row,currentSalesImport.headers,rule.orderAliases):"",packingId:currentSalesImport.marketplace==="Lazada"&&rule?getFirstValue(row,currentSalesImport.headers,rule.packingAliases):(currentSalesImport.marketplace==="Shopee"?getFirstValue(row,currentSalesImport.headers,["no. resi"]):""),sourceRowIndex:currentSalesImport.marketplace==="Lazada"?rowIndex:null,transactionDate:getSalesTransactionDate(row,currentSalesImport),reportDate,importedAt}));
  const payload={fileName:currentSalesImport.fileName,fileType:currentSalesImport.fileType,marketplace:currentSalesImport.marketplace,marketplaceId:currentSalesImport.marketplaceId,storeId,skuColumn:currentSalesImport.skuColumn,qtyColumn:currentSalesImport.qtyColumn,transactions};
  return payload;
 }
 function getSalesAmountOperator(row,data){
- const skuIndex=data.skuIndex!=null?data.skuIndex:data.headers.indexOf(data.skuColumn),qtyIndex=data.qtyIndex!=null?data.qtyIndex:data.headers.indexOf(data.qtyColumn),sku=skuIndex>=0?String(row[skuIndex]||"").trim():"",qty=data.marketplace==="Lazada"?1:(qtyIndex>=0?parseSalesNumber(row[qtyIndex]):0);
+ const skuIndex=data.skuIndex!=null?data.skuIndex:data.headers.indexOf(data.skuColumn),qtyIndex=data.qtyIndex!=null?data.qtyIndex:data.headers.indexOf(data.qtyColumn),sku=skuIndex>=0?String(row[skuIndex]||"").trim():"",qty=data.marketplace==="Lazada"?1:(data.marketplace==="Shopee"&&data.qtyColumn==="__SHOPEE_QTY_PER_ROW__"?1:(qtyIndex>=0?parseSalesNumber(row[qtyIndex]):0));
  if(data.marketplace==="Lazada")return parseLazadaUnitPrice(row[47])*qty;
  if(data.marketplace==="TikTok")return parseSalesNumber(row[15]);
- if(data.marketplace==="Shopee"){const rule=SALES_MARKETPLACE_RULES[data.marketplace];return parseSalesNumber(getFirstValue(row,data.headers,rule.priceAliases));}
+ if(data.marketplace==="Shopee"){const rule=SALES_MARKETPLACE_RULES[data.marketplace];const subtotal=parseSalesNumber(getFirstValue(row,data.headers,rule.priceAliases));if(subtotal>0)return subtotal;const product=getMasterProductBySku(sku);return product?(Number(product.price)||0)*qty:0;}
  if(data.marketplace==="Blibli")return parseSalesNumber(row[8])*qty;
  const product=getMasterProductBySku(sku);return product?(Number(product.price)||0)*qty:0;
 }
@@ -4594,8 +4707,9 @@ async function commitOperatorImport(){
 function confirmSalesColumns(){
  const sku=document.getElementById("manualSkuColumn")?.value,qty=document.getElementById("manualQtyColumn")?.value;
  const isLazada=currentSalesImport && currentSalesImport.marketplace==="Lazada";
- if(!sku||(!qty&&!isLazada)){alert(isLazada?"Pilih kolom SKU terlebih dahulu.":"Pilih kolom SKU dan QTY terlebih dahulu.");return;}
- currentSalesImport.skuColumn=sku;currentSalesImport.qtyColumn=isLazada?"__LAZADA_QTY_BY_SELLERSKU__":qty;currentSalesImport.skuIndex=currentSalesImport.headers.indexOf(sku);currentSalesImport.qtyIndex=isLazada?-1:currentSalesImport.headers.indexOf(qty);updatePreviewColumns();commitOperatorImport();
+ const isShopeeQtyPerRow=currentSalesImport && currentSalesImport.marketplace==="Shopee" && currentSalesImport.qtyColumn==="__SHOPEE_QTY_PER_ROW__";
+ if(!sku||(!qty&&!isLazada&&!isShopeeQtyPerRow)){alert(isLazada||isShopeeQtyPerRow?"Pilih kolom SKU terlebih dahulu.":"Pilih kolom SKU dan QTY terlebih dahulu.");return;}
+ currentSalesImport.skuColumn=sku;currentSalesImport.qtyColumn=isLazada?"__LAZADA_QTY_BY_SELLERSKU__":(isShopeeQtyPerRow?"__SHOPEE_QTY_PER_ROW__":qty);currentSalesImport.skuIndex=currentSalesImport.headers.indexOf(sku);currentSalesImport.qtyIndex=(isLazada||isShopeeQtyPerRow)?-1:currentSalesImport.headers.indexOf(qty);updatePreviewColumns();commitOperatorImport();
 }
 
 window.addEventListener("load",operatorInit);
