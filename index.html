@@ -2449,7 +2449,10 @@ async function analyzeSalesFile(input){
                 detectSalesMarketplace(cleanHeaders,file.name).marketplace === "Shopee";
             if(detectedShopee){
                 const shopeeSkuResult = findBestColumn(cleanHeaders,["nomor referensi sku"]);
-                if(shopeeSkuResult.column){ skuResult = shopeeSkuResult; }
+                if(shopeeSkuResult.column){
+                    skuResult.column = shopeeSkuResult.column;
+                    skuResult.score = shopeeSkuResult.score;
+                }
                 const shopeeQtyResult = findBestColumn(cleanHeaders,["jumlah"]);
                 qtyResult = shopeeQtyResult.column ? shopeeQtyResult : {column:"__SHOPEE_QTY_PER_ROW__",score:100};
             }
