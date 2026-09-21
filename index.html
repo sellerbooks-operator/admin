@@ -4650,6 +4650,36 @@ updatePreviewColumns();
 
 }
 
+function buildOperatorImportFingerprint(currentImport, storeId){
+ const marketplace=String(currentImport?.marketplace||"").trim().toLowerCase();
+ const store=String(storeId||"").trim().toLowerCase();
+ const rows=Array.isArray(currentImport?.rawData)?currentImport.rawData:[];
+ let source=marketplace+"|"+store+"|"+JSON.stringify(rows);
+ let hash=2166136261;
+ for(let i=0;i<source.length;i++){
+   hash^=source.charCodeAt(i);
+   hash=Math.imul(hash,16777619);
+ }
+ return "SBOPIMP-"+(hash>>>0).toString(16)+"-"+rows.length;
+}
+
+function getOperatorImportFingerprintStore(){
+ try{
+   const raw=(typeof sellerBooksStorage!=="undefined"?sellerBooksStorage:localStorage).getItem("sellerbooks_operator_import_fingerprints")||"[]";
+   const list=JSON.parse(raw);
+   return Array.isArray(list)?list:[];
+ }catch(e){return [];}
+}
+
+function saveOperatorImportFingerprint(fingerprint,storeId,marketplace){
+ try{
+   const storage=(typeof sellerBooksStorage!=="undefined"?sellerBooksStorage:localStorage);
+   const list=getOperatorImportFingerprintStore();
+   list.push({fingerprint,storeId:String(storeId||""),marketplace:String(marketplace||"").toLowerCase(),savedAt:new Date().toISOString()});
+   storage.setItem("sellerbooks_operator_import_fingerprints",JSON.stringify(list.slice(-500)));
+ }catch(e){console.warn("Fingerprint import operator gagal disimpan:",e);}
+}
+
 function saveSalesImportData(){
  if(!currentSalesImport)return null;
  const storeId=document.getElementById("salesStoreAccount")?.value||"";
@@ -4657,9 +4687,19 @@ function saveSalesImportData(){
  if(!store){alert("Pilih akun toko terlebih dahulu.");return null;}
 
  const rows=getCleanSalesRows(currentSalesImport), skuIndex=currentSalesImport.headers.indexOf(currentSalesImport.skuColumn), qtyIndex=currentSalesImport.headers.indexOf(currentSalesImport.qtyColumn), rule=SALES_MARKETPLACE_RULES[currentSalesImport.marketplace];
+ const importFingerprint=buildOperatorImportFingerprint(currentSalesImport,storeId);
+ const alreadyUploaded=getOperatorImportFingerprintStore().some(function(item){
+   return String(item.fingerprint||"")===String(importFingerprint)
+      && String(item.storeId||"")===String(storeId||"")
+      && String(item.marketplace||"").toLowerCase()===String(currentSalesImport.marketplace||"").toLowerCase();
+ });
+ if(alreadyUploaded){
+   alert("Data penjualan gagal disimpan.\n\nFile yang sama sudah pernah diupload sebelumnya.");
+   return null;
+ }
  const importedAt=new Date().toISOString(), reportDate=getIndonesiaDateString(importedAt);
  const transactions=rows.map((row,rowIndex)=>({marketplace:currentSalesImport.marketplace,marketplaceId:currentSalesImport.marketplaceId,storeId,storeName:store.name,sku:skuIndex>=0?String(row[skuIndex]||"").trim():"",qty:currentSalesImport.marketplace==="Lazada"?1:(currentSalesImport.marketplace==="Shopee"&&currentSalesImport.qtyColumn==="__SHOPEE_QTY_PER_ROW__"?1:(qtyIndex>=0?parseSalesNumber(row[qtyIndex]):0)),salesAmount:getSalesAmountOperator(row,currentSalesImport),orderId:rule?getFirstValue(row,currentSalesImport.headers,rule.orderAliases):"",packingId:currentSalesImport.marketplace==="Lazada"&&rule?getFirstValue(row,currentSalesImport.headers,rule.packingAliases):(currentSalesImport.marketplace==="Shopee"?getFirstValue(row,currentSalesImport.headers,["no. resi"]):""),sourceRowIndex:currentSalesImport.marketplace==="Lazada"?rowIndex:null,transactionDate:getSalesTransactionDate(row,currentSalesImport),reportDate,importedAt}));
- const payload={fileName:currentSalesImport.fileName,fileType:currentSalesImport.fileType,marketplace:currentSalesImport.marketplace,marketplaceId:currentSalesImport.marketplaceId,storeId,skuColumn:currentSalesImport.skuColumn,qtyColumn:currentSalesImport.qtyColumn,transactions};
+ const payload={fileName:currentSalesImport.fileName,fileType:currentSalesImport.fileType,marketplace:currentSalesImport.marketplace,marketplaceId:currentSalesImport.marketplaceId,storeId,skuColumn:currentSalesImport.skuColumn,qtyColumn:currentSalesImport.qtyColumn,importFingerprint,transactions};
  return payload;
 }
 function getSalesAmountOperator(row,data){
@@ -4691,6 +4731,13 @@ async function commitOperatorImport(){
       alert("Data penjualan gagal disimpan.\n\nSemua data pada file tersebut sudah pernah diinput sebelumnya.");
       return;
    }
+
+   /* Simpan fingerprint setelah server benar-benar menerima transaksi baru. */
+   saveOperatorImportFingerprint(
+      payload.importFingerprint,
+      payload.storeId,
+      payload.marketplace
+   );
 
    const card=document.getElementById("importResult");
    if(card)card.classList.add("show");
