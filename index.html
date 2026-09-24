@@ -4734,11 +4734,7 @@ function getSalesAmountOperator(row,data){
  if(data.marketplace==="Lazada")return parseLazadaUnitPrice(row[47])*qty;
  if(data.marketplace==="TikTok")return parseSalesNumber(row[15]);
  if(data.marketplace==="Shopee"){const rule=SALES_MARKETPLACE_RULES[data.marketplace];const subtotal=parseSalesNumber(getFirstValue(row,data.headers,rule.priceAliases));if(subtotal>0)return subtotal;const product=getMasterProductBySku(sku);return product?(Number(product.price)||0)*qty:0;}
- if(data.marketplace==="Blibli"){
-  const blibliPriceIndex=data.headers.findIndex(function(header){return normalizeHeader(header)==="harga produk";});
-  const fallbackPriceIndex=blibliPriceIndex>=0?blibliPriceIndex:(row.length>22&&row[22]!==""?22:8);
-  return parseSalesNumber(row[fallbackPriceIndex])*qty;
-}
+ if(data.marketplace==="Blibli")return parseSalesNumber(row[8])*qty;
  const product=getMasterProductBySku(sku);return product?(Number(product.price)||0)*qty:0;
 }
 
