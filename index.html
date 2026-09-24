@@ -4731,7 +4731,21 @@ function getSalesAmountOperator(row,data){
  if(data.marketplace==="Lazada")return parseLazadaUnitPrice(row[47])*qty;
  if(data.marketplace==="TikTok")return parseSalesNumber(row[15]);
  if(data.marketplace==="Shopee"){const rule=SALES_MARKETPLACE_RULES[data.marketplace];const subtotal=parseSalesNumber(getFirstValue(row,data.headers,rule.priceAliases));if(subtotal>0)return subtotal;const product=getMasterProductBySku(sku);return product?(Number(product.price)||0)*qty:0;}
- if(data.marketplace==="Blibli")return parseSalesNumber(row[8])*qty;
+ if(data.marketplace==="Blibli"){
+  /*
+     Blibli memiliki 2 format file.
+     Harga jual selalu diambil dari kolom/header "Harga produk":
+     - format 1: kolom I
+     - format 2: kolom W
+     Jangan gunakan posisi kolom tetap agar kedua template terbaca.
+  */
+  const blibliPriceIndex=data.headers.findIndex(function(header){
+    return normalizeHeader(header)==="harga produk";
+  });
+  return blibliPriceIndex>=0
+    ? parseSalesNumber(row[blibliPriceIndex])*qty
+    : 0;
+ }
  const product=getMasterProductBySku(sku);return product?(Number(product.price)||0)*qty:0;
 }
 
