@@ -1885,7 +1885,7 @@ const SALES_MARKETPLACE_RULES={
            Packing TIDAK memakai Nomor Pesanan/No. Order.
         */
         packingAliases:["nomor resi/awb","no. awb"],
-        orderAliases:["nomor pesanan"],
+        orderAliases:["nomor pesanan","no. order"],
         priceAliases:["harga produk","total harga produk"],
         dateAliases:["tanggal pesanan","tanggal order"]
     },
@@ -4798,12 +4798,13 @@ function saveSalesImportData(){
    const transactionDate=getSalesTransactionDate(row,currentSalesImport);
    const transactionSku=skuIndex>=0?String(row[skuIndex]||"").trim():"";
    const masterProductAtImport=getMasterProductBySku(transactionSku);
-   const adminFeeSkuSnapshot=masterProductAtImport &&
-      masterProductAtImport.adminFeePercent !== undefined &&
-      masterProductAtImport.adminFeePercent !== null &&
-      masterProductAtImport.adminFeePercent !== ""
-         ? Number(masterProductAtImport.adminFeePercent)
-         : "";
+   const rawAdminFeeSku=masterProductAtImport
+      ? masterProductAtImport.adminFeePercent
+      : "";
+   const normalizedAdminFeeSku=Number(rawAdminFeeSku);
+   const adminFeeSkuSnapshot=Number.isFinite(normalizedAdminFeeSku) && normalizedAdminFeeSku > 0
+      ? normalizedAdminFeeSku
+      : "";
    const priceSnapshot=qty>0
       ? (Number(salesAmount)||0)/qty
       : (masterProductAtImport ? (Number(masterProductAtImport.price)||0) : 0);
