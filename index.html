@@ -4837,7 +4837,7 @@ function saveSalesImportData(){
    };
  });
  const importFingerprint=buildOperatorImportFingerprint(currentSalesImport,storeId,transactions);
- const payload={fileName:currentSalesImport.fileName,fileType:currentSalesImport.fileType,marketplace:currentSalesImport.marketplace,marketplaceId:currentSalesImport.marketplaceId,storeId,skuColumn:currentSalesImport.skuColumn,qtyColumn:currentSalesImport.qtyColumn,importFingerprint,transactions};
+ const payload={contractVersion:"SELLERBOOKS_AUTOSYNC_V1",fileName:currentSalesImport.fileName,fileType:currentSalesImport.fileType,marketplace:currentSalesImport.marketplace,marketplaceId:currentSalesImport.marketplaceId,storeId,skuColumn:currentSalesImport.skuColumn,qtyColumn:currentSalesImport.qtyColumn,importFingerprint,transactions};
  return payload;
 }
 function getSalesAmountOperator(row,data){
