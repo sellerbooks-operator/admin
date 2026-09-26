@@ -4722,7 +4722,7 @@ function saveSalesImportData(){
     menentukan apakah transaksi masih ada.
  */
  const importedAt=new Date().toISOString(), reportDate=getIndonesiaDateString(importedAt);
- const transactions=rows.map((row,rowIndex)=>({marketplace:currentSalesImport.marketplace,marketplaceId:currentSalesImport.marketplaceId,storeId,storeName:store.name,sku:skuIndex>=0?String(row[skuIndex]||"").trim():"",qty:currentSalesImport.marketplace==="Lazada"?1:(currentSalesImport.marketplace==="Shopee"&&currentSalesImport.qtyColumn==="__SHOPEE_QTY_PER_ROW__"?1:(qtyIndex>=0?parseSalesNumber(row[qtyIndex]):0)),salesAmount:getSalesAmountOperator(row,currentSalesImport),orderId:rule?getFirstValue(row,currentSalesImport.headers,rule.orderAliases):"",packingId:currentSalesImport.marketplace==="Lazada"&&rule?getFirstValue(row,currentSalesImport.headers,rule.packingAliases):(currentSalesImport.marketplace==="Shopee"?getFirstValue(row,currentSalesImport.headers,["no. resi"]):""),sourceRowIndex:currentSalesImport.marketplace==="Lazada"?rowIndex:null,transactionDate:getSalesTransactionDate(row,currentSalesImport),reportDate,importedAt}));
+ const transactions=rows.map((row,rowIndex)=>({marketplace:currentSalesImport.marketplace,marketplaceId:currentSalesImport.marketplaceId,storeId,storeName:store.name,sku:skuIndex>=0?String(row[skuIndex]||"").trim():"",qty:currentSalesImport.marketplace==="Lazada"?1:(currentSalesImport.marketplace==="Shopee"&&currentSalesImport.qtyColumn==="__SHOPEE_QTY_PER_ROW__"?1:(qtyIndex>=0?parseSalesNumber(row[qtyIndex]):0)),salesAmount:getSalesAmountOperator(row,currentSalesImport),orderId:rule?getFirstValue(row,currentSalesImport.headers,rule.orderAliases):"",packingId:currentSalesImport.marketplace==="Blibli"&&rule?getFirstValue(row,currentSalesImport.headers,rule.packingAliases):(currentSalesImport.marketplace==="Lazada"&&rule?getFirstValue(row,currentSalesImport.headers,rule.packingAliases):(currentSalesImport.marketplace==="Shopee"?getFirstValue(row,currentSalesImport.headers,["no. resi"]):"")),sourceRowIndex:currentSalesImport.marketplace==="Lazada"?rowIndex:null,transactionDate:getSalesTransactionDate(row,currentSalesImport),reportDate,importedAt}));
  const payload={fileName:currentSalesImport.fileName,fileType:currentSalesImport.fileType,marketplace:currentSalesImport.marketplace,marketplaceId:currentSalesImport.marketplaceId,storeId,skuColumn:currentSalesImport.skuColumn,qtyColumn:currentSalesImport.qtyColumn,importFingerprint,transactions};
  return payload;
 }
@@ -4733,18 +4733,19 @@ function getSalesAmountOperator(row,data){
  if(data.marketplace==="Shopee"){const rule=SALES_MARKETPLACE_RULES[data.marketplace];const subtotal=parseSalesNumber(getFirstValue(row,data.headers,rule.priceAliases));if(subtotal>0)return subtotal;const product=getMasterProductBySku(sku);return product?(Number(product.price)||0)*qty:0;}
  if(data.marketplace==="Blibli"){
   /*
-     Blibli memiliki 2 format file.
-     Harga jual selalu diambil dari kolom/header "Harga produk":
-     - format 1: kolom I
-     - format 2: kolom W
-     Jangan gunakan posisi kolom tetap agar kedua template terbaca.
+     SAMA DENGAN IMPORT ADMIN:
+     Blibli memiliki 2 format file. Harga jual diambil dari
+     header "Harga produk" (format 1: kolom I, format 2: kolom W).
+     Jika header tidak ditemukan, gunakan fallback posisi yang sama
+     dengan Admin agar hasil import Operator identik.
   */
   const blibliPriceIndex=data.headers.findIndex(function(header){
     return normalizeHeader(header)==="harga produk";
   });
-  return blibliPriceIndex>=0
-    ? parseSalesNumber(row[blibliPriceIndex])*qty
-    : 0;
+  const fallbackPriceIndex=blibliPriceIndex>=0
+    ? blibliPriceIndex
+    : (row.length>22 && row[22]!=="" ? 22 : 8);
+  return parseSalesNumber(row[fallbackPriceIndex])*qty;
  }
  const product=getMasterProductBySku(sku);return product?(Number(product.price)||0)*qty:0;
 }
