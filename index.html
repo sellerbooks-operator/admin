@@ -4781,7 +4781,6 @@ function saveSalesImportData(){
  if(!store){alert("Pilih akun toko terlebih dahulu.");return null;}
 
  const rows=getCleanSalesRows(currentSalesImport), skuIndex=currentSalesImport.headers.indexOf(currentSalesImport.skuColumn), qtyIndex=currentSalesImport.headers.indexOf(currentSalesImport.qtyColumn), rule=SALES_MARKETPLACE_RULES[currentSalesImport.marketplace];
- const importFingerprint=buildOperatorImportFingerprint(currentSalesImport,storeId,transactions);
  /*
     Jangan menolak file hanya karena fingerprint lokal pernah tersimpan.
     Data bisa saja sudah dihapus dari Seller Admin dan harus dapat
@@ -4837,6 +4836,7 @@ function saveSalesImportData(){
       importedAt
    };
  });
+ const importFingerprint=buildOperatorImportFingerprint(currentSalesImport,storeId,transactions);
  const payload={fileName:currentSalesImport.fileName,fileType:currentSalesImport.fileType,marketplace:currentSalesImport.marketplace,marketplaceId:currentSalesImport.marketplaceId,storeId,skuColumn:currentSalesImport.skuColumn,qtyColumn:currentSalesImport.qtyColumn,importFingerprint,transactions};
  return payload;
 }
