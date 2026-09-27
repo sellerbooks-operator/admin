@@ -2984,6 +2984,13 @@ function renderSalesAnalysis(){
             "SKU & QTY ditemukan ✓";
 
 
+        /*
+           PENTING:
+           Tombol Lanjutkan Import harus tetap bisa diklik
+           meskipun Marketplace/Akun Toko Owner sudah tidak ada.
+           Pemeriksaan tersebut dilakukan DI DALAM continueSalesImport(),
+           bukan dengan men-disable tombol.
+        */
         continueButton.disabled = false;
 
     }
@@ -4600,25 +4607,35 @@ async function sellerBooksValidateImportWorkspace(){
 
 async function continueSalesImport(){
 
+    /*
+       Tombol selalu boleh diklik setelah file berhasil dianalisis.
+       Jangan memblokir tombol hanya karena Marketplace/Akun Toko
+       sudah hilang. Justru klik tombol ini harus memicu pemeriksaan
+       binding Owner dan, jika sudah tidak valid, mengembalikan Operator
+       ke halaman Masukkan Nama Pemilik.
+    */
     if(!currentSalesImport){
-
-        alert(
-            "Belum ada file yang dianalisis."
-        );
-
+        alert("Belum ada file yang dianalisis.");
         return;
-
     }
 
     const continueButton=document.getElementById("continueSalesImportButton");
-    if(continueButton) continueButton.disabled=true;
 
     try{
+        /* Pastikan tombol tidak terkunci oleh pemeriksaan sebelumnya. */
+        if(continueButton) continueButton.disabled=false;
+
         const valid=await sellerBooksValidateImportWorkspace();
         if(!valid) return;
+
         openSalesPreview();
-    }finally{
-        if(continueButton && currentSalesImport) continueButton.disabled=false;
+    }catch(error){
+        console.error("Gagal melanjutkan import:",error);
+        closeSalesPreview();
+        resetSalesImport();
+        sellerBooksForceOwnerNameStep(
+            "Nama Pemilik sudah tidak valid. Masukkan kembali Nama Pemilik yang terdaftar di SellerBooks Admin."
+        );
     }
 
 }
