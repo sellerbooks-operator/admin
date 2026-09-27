@@ -2984,13 +2984,6 @@ function renderSalesAnalysis(){
             "SKU & QTY ditemukan ✓";
 
 
-        /*
-           PENTING:
-           Tombol Lanjutkan Import harus tetap bisa diklik
-           meskipun Marketplace/Akun Toko Owner sudah tidak ada.
-           Pemeriksaan tersebut dilakukan DI DALAM continueSalesImport(),
-           bukan dengan men-disable tombol.
-        */
         continueButton.disabled = false;
 
     }
@@ -4130,15 +4123,78 @@ function sellerBooksStartOperatorIdentityGuard(){
 }
 
 async function operatorRestoreSavedWorkspace(){
-  const {data,error}=await sellerBooksSupabase.rpc("sellerbooks_operator_workspace");
-  if(error) throw error;
+  /*
+     Pengaman workspace:
+     fungsi ini hanya memulihkan workspace milik Owner yang sedang
+     valid. Pemeriksaan identitas dilakukan sebelum data workspace
+     dipasang ke window.
+  */
+  const {data:identity,error:identityError}=
+    await sellerBooksSupabase.rpc("sellerbooks_operator_identity_status");
+
+  if(identityError)throw identityError;
+
+  if(!identity?.valid){
+    throw new Error("OWNER_NAME_BINDING_CHANGED");
+  }
+
+  const {data,error}=
+    await sellerBooksSupabase.rpc("sellerbooks_operator_workspace");
+
+  if(error)throw error;
+
   sellerBooksOperatorWorkspace=data||null;
-  if(!sellerBooksOperatorWorkspace || !sellerBooksOperatorWorkspace.owner_user_id) throw new Error("OPERATOR_NOT_ASSIGNED");
-  window.marketplaces=sellerBooksOperatorWorkspace.marketplaces||[];
-  window.stores=sellerBooksOperatorWorkspace.stores||[];
-  window.products=sellerBooksOperatorWorkspace.products||[];
+
+  if(
+    !sellerBooksOperatorWorkspace ||
+    !sellerBooksOperatorWorkspace.owner_user_id
+  ){
+    throw new Error("OPERATOR_NOT_ASSIGNED");
+  }
+
+  const workspaceOwnerId=
+    String(sellerBooksOperatorWorkspace.owner_user_id||"");
+
+  const workspaceOwnerName=
+    String(sellerBooksOperatorWorkspace.owner_name||"")
+      .trim()
+      .toLowerCase();
+
+  const currentOwnerId=
+    String(identity.owner_user_id||"");
+
+  const currentOwnerName=
+    String(identity.owner_name||"")
+      .trim()
+      .toLowerCase();
+
+  if(
+    workspaceOwnerId!==currentOwnerId ||
+    (
+      workspaceOwnerName &&
+      currentOwnerName &&
+      workspaceOwnerName!==currentOwnerName
+    )
+  ){
+    throw new Error("OWNER_NAME_BINDING_CHANGED");
+  }
+
+  window.marketplaces=
+    sellerBooksOperatorWorkspace.marketplaces||[];
+
+  window.stores=
+    sellerBooksOperatorWorkspace.stores||[];
+
+  window.products=
+    sellerBooksOperatorWorkspace.products||[];
+
   const who=document.getElementById("operatorEmail");
-  if(who)who.textContent=(sellerBooksAuthUser?.email||"")+" • "+(sellerBooksOperatorWorkspace.owner_name||"");
+
+  if(who){
+    who.textContent=
+      (sellerBooksAuthUser?.email||"")+" • "+
+      (identity.owner_name||sellerBooksOperatorWorkspace.owner_name||"");
+  }
 }
 
 function operatorShowApp(){document.getElementById("loginPage").style.display="none";document.getElementById("app").style.display="block";}
@@ -4166,66 +4222,169 @@ async function checkOperatorApproval(){
   if(!sellerBooksAuthUser){operatorShowLogin();return;}
   const msg=document.getElementById("operatorApprovalMessage");
   if(msg)msg.textContent="Memeriksa persetujuan Core Adiimasa...";
+
   try{
     const {data,error}=await sellerBooksSupabase.rpc("sellerbooks_operator_approval_status");
     if(error)throw error;
+
     const status=String(data?.status||"NOT_REQUESTED").toUpperCase();
+
     if(status==="APPROVED" && data?.is_active){
+
       /*
-         Sama seperti Dashboard Owner: setelah Gmail Operator pernah
-         menyelesaikan identitas, refresh/logout-login tidak meminta
-         Nama Pemilik lagi. Identitas diambil dari binding server.
+         MEKANISME LOGIN ULANG OPERATOR
+
+         Tombol "Lanjutkan Import" tidak dipakai untuk pemeriksaan ini.
+         Setiap kali Operator keluar lalu login kembali dengan Gmail yang sama,
+         identitas Owner harus diverifikasi ulang sebelum workspace dipulihkan.
+
+         Contoh:
+         Operator sebelumnya terikat ke "keren".
+         Jika Admin mengubah/reset Owner menjadi nama lain,
+         login ulang TIDAK boleh langsung membuka Dashboard/Import.
+         Operator harus kembali ke halaman Nama Pemilik.
       */
-      if(msg)msg.textContent="Persetujuan aktif. Memulihkan akses Import Penjualan...";
+
+      if(msg)msg.textContent="Memeriksa Nama Pemilik yang tersimpan...";
+
       try{
+        const {data:identity,error:identityError}=
+          await sellerBooksSupabase.rpc("sellerbooks_operator_identity_status");
+
+        if(identityError)throw identityError;
+
+        /*
+           Jika binding Operator sudah tidak valid, langsung paksa
+           kembali ke halaman Nama Pemilik.
+        */
+        if(!identity?.valid){
+          sellerBooksForceOwnerNameStep(
+            "Nama Pemilik yang tersimpan pada Operator sudah tidak sesuai dengan data SellerBooks Admin. Masukkan Nama Pemilik yang baru."
+          );
+          return;
+        }
+
+        /*
+           Ambil workspace setelah identitas dinyatakan valid.
+           Tetap lakukan perbandingan Owner ID + Nama agar perubahan
+           Owner tidak pernah langsung membuka workspace lama.
+        */
+        if(msg)msg.textContent="Memulihkan akses Import Penjualan...";
         await operatorRestoreSavedWorkspace();
+
+        const workspaceOwnerId=
+          String(sellerBooksOperatorWorkspace?.owner_user_id||"");
+
+        const workspaceOwnerName=
+          String(sellerBooksOperatorWorkspace?.owner_name||"")
+            .trim()
+            .toLowerCase();
+
+        const currentOwnerId=
+          String(identity?.owner_user_id||"");
+
+        const currentOwnerName=
+          String(identity?.owner_name||"")
+            .trim()
+            .toLowerCase();
+
+        if(
+          !workspaceOwnerId ||
+          !currentOwnerId ||
+          workspaceOwnerId!==currentOwnerId ||
+          (
+            workspaceOwnerName &&
+            currentOwnerName &&
+            workspaceOwnerName!==currentOwnerName
+          )
+        ){
+          sellerBooksForceOwnerNameStep(
+            "Nama Pemilik SellerBooks Admin sudah berubah. Masukkan Nama Pemilik yang sesuai dengan data SellerBooks Admin."
+          );
+          return;
+        }
+
+        if(msg)msg.textContent="Nama Pemilik masih sesuai. Membuka Import Penjualan...";
         operatorShowApp();
         sellerBooksStartOperatorIdentityGuard();
         return;
+
       }catch(resolveError){
-        console.error("Pemulihan workspace Operator gagal:",resolveError);
+        console.error("Validasi identitas Operator saat login ulang gagal:",resolveError);
+
         const resolveCode=String(resolveError?.message||"");
-        if(resolveCode.includes("OPERATOR_NOT_ASSIGNED")){
-          showOwnerNameStep();
+
+        if(
+          resolveCode.includes("OPERATOR_NOT_ASSIGNED") ||
+          resolveCode.includes("OWNER_NAME_NOT_FOUND") ||
+          resolveCode.includes("OWNER_SELLERBOOKS_DATA_NOT_FOUND") ||
+          resolveCode.includes("OWNER_NAME_BINDING_CHANGED")
+        ){
+          sellerBooksForceOwnerNameStep(
+            "Nama Pemilik yang tersimpan pada Operator sudah tidak sesuai dengan data SellerBooks Admin. Masukkan kembali Nama Pemilik."
+          );
           return;
         }
-        if(resolveCode.includes("OWNER_SELLERBOOKS_DATA_NOT_FOUND") || resolveCode.includes("OWNER_NAME_NOT_FOUND")){
-          showOwnerNameStep();
-          const ownerMsg=document.getElementById("ownerNameMessage");
-          if(ownerMsg)ownerMsg.textContent="Nama Pemilik yang tersimpan tidak lagi tersedia. Masukkan Nama Pemilik yang terdaftar di SellerBooks.";
-          return;
-        }
+
         if(resolveCode.includes("OPERATOR_CORE_APPROVAL_REQUIRED")){
           if(msg)msg.textContent="Operator belum disetujui Core Adiimasa.";
           return;
         }
-        if(msg)msg.textContent="Persetujuan aktif, tetapi workspace belum dapat dipulihkan. Silakan tekan Cek Persetujuan lagi.";
+
+        /*
+           Fail closed:
+           jika identitas tidak dapat diverifikasi, jangan pernah
+           membuka Dashboard/Import secara otomatis.
+        */
+        sellerBooksForceOwnerNameStep(
+          "Identitas Nama Pemilik tidak dapat diverifikasi. Masukkan kembali Nama Pemilik yang terdaftar di SellerBooks Admin."
+        );
         return;
       }
-      if(msg)msg.textContent="Persetujuan sudah aktif. Silakan lanjut ke tingkat 2: masukkan Nama Pemilik.";
-      showOwnerNameStep();
-      return;
     }
+
     if(status==="SUSPENDED"){
       if(msg)msg.textContent="Akun Operator sedang ditangguhkan oleh Core Adiimasa.";
       return;
     }
+
     if(status==="REJECTED"){
       if(msg)msg.textContent="Permintaan Operator ditolak oleh Core Adiimasa.";
       return;
     }
+
     if(status==="NOT_REQUESTED"){
-      const {data:req,error:reqErr}=await sellerBooksSupabase.rpc("sellerbooks_operator_request_access");
+      const {data:req,error:reqErr}=
+        await sellerBooksSupabase.rpc("sellerbooks_operator_request_access");
+
       if(reqErr)throw reqErr;
-      if(String(req?.status||"").toUpperCase()==="APPROVED"){showOwnerNameStep();return;}
+
+      if(String(req?.status||"").toUpperCase()==="APPROVED"){
+        showOwnerNameStep();
+        return;
+      }
     }
-    if(msg)msg.textContent="Belum disetujui. Silakan tunggu persetujuan Core Adiimasa lalu tekan Cek Persetujuan.";
+
+    if(msg){
+      msg.textContent=
+        "Belum disetujui. Silakan tunggu persetujuan Core Adiimasa lalu tekan Cek Persetujuan.";
+    }
+
   }catch(e){
     console.error(e);
+
     const code=String(e?.message||"");
+
     if(code.includes("OPERATOR_EMAIL_IS_OWNER")){
-      if(msg)msg.textContent="Gmail ini terdaftar sebagai Owner. Gunakan Gmail Operator yang berbeda.";
-    }else if(msg)msg.textContent="Gagal memeriksa persetujuan.\n\n"+(e.message||"Silakan coba lagi.");
+      if(msg){
+        msg.textContent=
+          "Gmail ini terdaftar sebagai Owner. Gunakan Gmail Operator yang berbeda.";
+      }
+    }else if(msg){
+      msg.textContent=
+        "Gagal memeriksa persetujuan.\\n\\n"+
+        (e.message||"Silakan coba lagi.");
+    }
   }
 }
 async function resolveOwnerWorkspace(){
@@ -4523,120 +4682,19 @@ function populateSalesStoreAccounts(){
 
 }
 function getMasterProductBySku(sku){const n=String(sku||"").trim().toLowerCase();return (products||[]).find(p=>String(p.sku||"").trim().toLowerCase()===n)||null;}
-async function sellerBooksValidateImportWorkspace(){
-    /*
-       PENGAMAN SEBELUM IMPORT:
-       Jangan membuka preview/import jika binding Nama Pemilik
-       sudah tidak valid atau marketplace/akun toko yang menjadi
-       target workspace sudah tidak ada di database Owner.
-    */
-    if(!sellerBooksAuthUser || !sellerBooksOperatorWorkspace){
-        sellerBooksForceOwnerNameStep(
-            "Sesi Nama Pemilik sudah tidak valid. Masukkan kembali Nama Pemilik yang terdaftar di SellerBooks Admin."
-        );
-        return false;
-    }
+function continueSalesImport(){
 
-    try{
-        const {data,error}=await sellerBooksSupabase.rpc("sellerbooks_operator_identity_status");
-        if(error) throw error;
-
-        if(!data?.valid){
-            closeSalesPreview();
-            resetSalesImport();
-            sellerBooksForceOwnerNameStep(
-                "Nama Pemilik pada SellerBooks Admin sudah direset atau tidak lagi terdaftar. Masukkan Nama Pemilik yang terdaftar di SellerBooks Admin."
-            );
-            return false;
-        }
-
-        const boundOwnerId=String(sellerBooksOperatorWorkspace.owner_user_id||"");
-        const boundOwnerName=String(sellerBooksOperatorWorkspace.owner_name||"").trim().toLowerCase();
-        const currentOwnerId=String(data.owner_user_id||"");
-        const currentOwnerName=String(data.owner_name||"").trim().toLowerCase();
-
-        if(!boundOwnerId || boundOwnerId!==currentOwnerId || (boundOwnerName && boundOwnerName!==currentOwnerName)){
-            closeSalesPreview();
-            resetSalesImport();
-            sellerBooksForceOwnerNameStep(
-                "Nama Pemilik SellerBooks Admin sudah berubah. Masukkan kembali Nama Pemilik yang sesuai dengan data SellerBooks Admin."
-            );
-            return false;
-        }
-
-        const marketplaceName=String(currentSalesImport?.marketplace||"").trim().toLowerCase();
-        const marketplaceId=String(currentSalesImport?.marketplaceId||"").trim().toLowerCase();
-        const marketplaceList=Array.isArray(window.marketplaces)?window.marketplaces:[];
-        const storeList=Array.isArray(window.stores)?window.stores:[];
-
-        const marketplaceExists=marketplaceList.some(function(mp){
-            const id=String(mp?.id||mp?.marketplaceId||"").trim().toLowerCase();
-            const name=String(mp?.name||"").trim().toLowerCase();
-            return (marketplaceId && id===marketplaceId) || (marketplaceName && name===marketplaceName) ||
-                   (marketplaceName==="tiktok" && (name==="tiktok shop" || name==="tiktokshop"));
-        });
-
-        const storeExists=storeList.some(function(store){
-            const status=String(store?.status||"active").trim().toLowerCase();
-            const sid=String(store?.marketplaceId||store?.marketplace_id||"").trim().toLowerCase();
-            return status!=="inactive" && status!=="disabled" &&
-                   ((marketplaceId && sid===marketplaceId) ||
-                    (!marketplaceId && String(store?.marketplace||"").trim().toLowerCase()===marketplaceName));
-        });
-
-        if(!marketplaceExists || !storeExists){
-            closeSalesPreview();
-            resetSalesImport();
-            sellerBooksForceOwnerNameStep(
-                "Akun toko atau Marketplace untuk Nama Pemilik ini sudah tidak terdaftar di SellerBooks Admin. Masukkan kembali Nama Pemilik yang terdaftar di SellerBooks Admin."
-            );
-            return false;
-        }
-
-        return true;
-    }catch(error){
-        console.error("Validasi workspace sebelum import gagal:",error);
-        closeSalesPreview();
-        resetSalesImport();
-        sellerBooksForceOwnerNameStep(
-            "Identitas Nama Pemilik tidak dapat diverifikasi. Silakan masukkan kembali Nama Pemilik yang terdaftar di SellerBooks Admin."
-        );
-        return false;
-    }
-}
-
-async function continueSalesImport(){
-
-    /*
-       Tombol selalu boleh diklik setelah file berhasil dianalisis.
-       Jangan memblokir tombol hanya karena Marketplace/Akun Toko
-       sudah hilang. Justru klik tombol ini harus memicu pemeriksaan
-       binding Owner dan, jika sudah tidak valid, mengembalikan Operator
-       ke halaman Masukkan Nama Pemilik.
-    */
     if(!currentSalesImport){
-        alert("Belum ada file yang dianalisis.");
-        return;
-    }
 
-    const continueButton=document.getElementById("continueSalesImportButton");
-
-    try{
-        /* Pastikan tombol tidak terkunci oleh pemeriksaan sebelumnya. */
-        if(continueButton) continueButton.disabled=false;
-
-        const valid=await sellerBooksValidateImportWorkspace();
-        if(!valid) return;
-
-        openSalesPreview();
-    }catch(error){
-        console.error("Gagal melanjutkan import:",error);
-        closeSalesPreview();
-        resetSalesImport();
-        sellerBooksForceOwnerNameStep(
-            "Nama Pemilik sudah tidak valid. Masukkan kembali Nama Pemilik yang terdaftar di SellerBooks Admin."
+        alert(
+            "Belum ada file yang dianalisis."
         );
+
+        return;
+
     }
+
+    openSalesPreview();
 
 }
 
