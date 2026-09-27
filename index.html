@@ -4516,7 +4516,89 @@ function populateSalesStoreAccounts(){
 
 }
 function getMasterProductBySku(sku){const n=String(sku||"").trim().toLowerCase();return (products||[]).find(p=>String(p.sku||"").trim().toLowerCase()===n)||null;}
-function continueSalesImport(){
+async function sellerBooksValidateImportWorkspace(){
+    /*
+       PENGAMAN SEBELUM IMPORT:
+       Jangan membuka preview/import jika binding Nama Pemilik
+       sudah tidak valid atau marketplace/akun toko yang menjadi
+       target workspace sudah tidak ada di database Owner.
+    */
+    if(!sellerBooksAuthUser || !sellerBooksOperatorWorkspace){
+        sellerBooksForceOwnerNameStep(
+            "Sesi Nama Pemilik sudah tidak valid. Masukkan kembali Nama Pemilik yang terdaftar di SellerBooks Admin."
+        );
+        return false;
+    }
+
+    try{
+        const {data,error}=await sellerBooksSupabase.rpc("sellerbooks_operator_identity_status");
+        if(error) throw error;
+
+        if(!data?.valid){
+            closeSalesPreview();
+            resetSalesImport();
+            sellerBooksForceOwnerNameStep(
+                "Nama Pemilik pada SellerBooks Admin sudah direset atau tidak lagi terdaftar. Masukkan Nama Pemilik yang terdaftar di SellerBooks Admin."
+            );
+            return false;
+        }
+
+        const boundOwnerId=String(sellerBooksOperatorWorkspace.owner_user_id||"");
+        const boundOwnerName=String(sellerBooksOperatorWorkspace.owner_name||"").trim().toLowerCase();
+        const currentOwnerId=String(data.owner_user_id||"");
+        const currentOwnerName=String(data.owner_name||"").trim().toLowerCase();
+
+        if(!boundOwnerId || boundOwnerId!==currentOwnerId || (boundOwnerName && boundOwnerName!==currentOwnerName)){
+            closeSalesPreview();
+            resetSalesImport();
+            sellerBooksForceOwnerNameStep(
+                "Nama Pemilik SellerBooks Admin sudah berubah. Masukkan kembali Nama Pemilik yang sesuai dengan data SellerBooks Admin."
+            );
+            return false;
+        }
+
+        const marketplaceName=String(currentSalesImport?.marketplace||"").trim().toLowerCase();
+        const marketplaceId=String(currentSalesImport?.marketplaceId||"").trim().toLowerCase();
+        const marketplaceList=Array.isArray(window.marketplaces)?window.marketplaces:[];
+        const storeList=Array.isArray(window.stores)?window.stores:[];
+
+        const marketplaceExists=marketplaceList.some(function(mp){
+            const id=String(mp?.id||mp?.marketplaceId||"").trim().toLowerCase();
+            const name=String(mp?.name||"").trim().toLowerCase();
+            return (marketplaceId && id===marketplaceId) || (marketplaceName && name===marketplaceName) ||
+                   (marketplaceName==="tiktok" && (name==="tiktok shop" || name==="tiktokshop"));
+        });
+
+        const storeExists=storeList.some(function(store){
+            const status=String(store?.status||"active").trim().toLowerCase();
+            const sid=String(store?.marketplaceId||store?.marketplace_id||"").trim().toLowerCase();
+            return status!=="inactive" && status!=="disabled" &&
+                   ((marketplaceId && sid===marketplaceId) ||
+                    (!marketplaceId && String(store?.marketplace||"").trim().toLowerCase()===marketplaceName));
+        });
+
+        if(!marketplaceExists || !storeExists){
+            closeSalesPreview();
+            resetSalesImport();
+            sellerBooksForceOwnerNameStep(
+                "Akun toko atau Marketplace untuk Nama Pemilik ini sudah tidak terdaftar di SellerBooks Admin. Masukkan kembali Nama Pemilik yang terdaftar di SellerBooks Admin."
+            );
+            return false;
+        }
+
+        return true;
+    }catch(error){
+        console.error("Validasi workspace sebelum import gagal:",error);
+        closeSalesPreview();
+        resetSalesImport();
+        sellerBooksForceOwnerNameStep(
+            "Identitas Nama Pemilik tidak dapat diverifikasi. Silakan masukkan kembali Nama Pemilik yang terdaftar di SellerBooks Admin."
+        );
+        return false;
+    }
+}
+
+async function continueSalesImport(){
 
     if(!currentSalesImport){
 
@@ -4528,7 +4610,16 @@ function continueSalesImport(){
 
     }
 
-    openSalesPreview();
+    const continueButton=document.getElementById("continueSalesImportButton");
+    if(continueButton) continueButton.disabled=true;
+
+    try{
+        const valid=await sellerBooksValidateImportWorkspace();
+        if(!valid) return;
+        openSalesPreview();
+    }finally{
+        if(continueButton && currentSalesImport) continueButton.disabled=false;
+    }
 
 }
 
