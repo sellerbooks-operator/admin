@@ -4957,7 +4957,13 @@ function saveSalesImportData(){
  const transactions=rows.map((row,rowIndex)=>({marketplace:currentSalesImport.marketplace,marketplaceId:currentSalesImport.marketplaceId,storeId,storeName:store.name,sku:skuIndex>=0?String(row[skuIndex]||"").trim():"",qty:currentSalesImport.marketplace==="Lazada"?1:(currentSalesImport.marketplace==="Shopee"&&currentSalesImport.qtyColumn==="__SHOPEE_QTY_PER_ROW__"?1:(qtyIndex>=0?parseSalesNumber(row[qtyIndex]):0)),salesAmount:getSalesAmountOperator(row,currentSalesImport),orderId:currentSalesImport.marketplace==="Shopee"
  ? (String(getFirstValue(row,currentSalesImport.headers,["no. pesanan"])||"").trim()
     || String(getFirstValue(row,currentSalesImport.headers,["booking sn"])||"").trim())
- : (rule?getFirstValue(row,currentSalesImport.headers,rule.orderAliases):""),packingId:currentSalesImport.marketplace==="Lazada"&&rule?getFirstValue(row,currentSalesImport.headers,rule.packingAliases):(currentSalesImport.marketplace==="Shopee"?getFirstValue(row,currentSalesImport.headers,["no. resi"]):""),sourceRowIndex:currentSalesImport.marketplace==="Lazada"?rowIndex:null,transactionDate:getSalesTransactionDate(row,currentSalesImport),reportDate,importedAt}));
+ : (rule?getFirstValue(row,currentSalesImport.headers,rule.orderAliases):""),packingId:rule
+    ?getFirstValue(
+        row,
+        currentSalesImport.headers,
+        rule.packingAliases
+    )
+    :"",sourceRowIndex:currentSalesImport.marketplace==="Lazada"?rowIndex:null,transactionDate:getSalesTransactionDate(row,currentSalesImport),reportDate,importedAt}));
  const payload={contractVersion:"SELLERBOOKS_AUTOSYNC_V1",fileName:currentSalesImport.fileName,fileType:currentSalesImport.fileType,marketplace:currentSalesImport.marketplace,marketplaceId:currentSalesImport.marketplaceId,storeId,skuColumn:currentSalesImport.skuColumn,qtyColumn:currentSalesImport.qtyColumn,importFingerprint,transactions};
  return payload;
 }
