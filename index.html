@@ -4950,7 +4950,7 @@ function saveSalesImportData(){
  ? (String(getFirstValue(row,currentSalesImport.headers,["no. pesanan"])||"").trim()
     || String(getFirstValue(row,currentSalesImport.headers,["booking sn"])||"").trim())
  : (rule?getFirstValue(row,currentSalesImport.headers,rule.orderAliases):""),packingId:currentSalesImport.marketplace==="Lazada"&&rule?getFirstValue(row,currentSalesImport.headers,rule.packingAliases):(currentSalesImport.marketplace==="Shopee"?getFirstValue(row,currentSalesImport.headers,["no. resi"]):""),sourceRowIndex:currentSalesImport.marketplace==="Lazada"?rowIndex:null,transactionDate:getSalesTransactionDate(row,currentSalesImport),reportDate,importedAt}));
- const payload={fileName:currentSalesImport.fileName,fileType:currentSalesImport.fileType,marketplace:currentSalesImport.marketplace,marketplaceId:currentSalesImport.marketplaceId,storeId,skuColumn:currentSalesImport.skuColumn,qtyColumn:currentSalesImport.qtyColumn,importFingerprint,transactions};
+ const payload={contractVersion:"SELLERBOOKS_AUTOSYNC_V1",fileName:currentSalesImport.fileName,fileType:currentSalesImport.fileType,marketplace:currentSalesImport.marketplace,marketplaceId:currentSalesImport.marketplaceId,storeId,skuColumn:currentSalesImport.skuColumn,qtyColumn:currentSalesImport.qtyColumn,importFingerprint,transactions};
  return payload;
 }
 function getSalesAmountOperator(row,data){
