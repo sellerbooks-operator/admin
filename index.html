@@ -1040,7 +1040,7 @@
     box-sizing:border-box;
 }
 </style>
-</head><body><div id="sellerBooksDialogOverlay" aria-hidden="true"><div class="sellerbooks-dialog" role="dialog" aria-modal="true" aria-labelledby="sellerBooksDialogTitle"><div class="sellerbooks-dialog-header"><div class="sellerbooks-dialog-icon" id="sellerBooksDialogIcon">✓</div><div class="sellerbooks-dialog-title" id="sellerBooksDialogTitle">SellerBooks</div></div><div class="sellerbooks-dialog-body" id="sellerBooksDialogMessage"></div><div class="sellerbooks-dialog-footer"><button type="button" class="sellerbooks-dialog-button sellerbooks-dialog-ok" id="sellerBooksDialogOk">OK</button></div></div></div><section id="loginPage"><div class="login-card"><div class="login-brand"><div class="logo">SB</div><div><strong>SellerBooks</strong><div style="font-size:11px;color:#64748b;margin-top:3px">IMPORT PENJUALAN</div></div></div><div id="loginStep1"><h1>Login Operator</h1><p>Masuk menggunakan Gmail Operator untuk mengajukan akses ke SellerBooks.</p><button class="google-button" type="button" onclick="loginGoogle()">🔐 Masuk dengan Google</button><div class="login-note">Gunakan Gmail Operator yang berbeda dari Gmail Owner. Setelah login, permintaan akses akan menunggu persetujuan Core Adiimasa.</div></div><div id="loginStep2" style="display:none"><div style="font-size:42px;text-align:center;margin-bottom:10px">⏳</div><h1 style="text-align:center">Menunggu Persetujuan</h1><p style="text-align:center">Akun Gmail Operator Anda sudah login, tetapi belum mendapat persetujuan dari <strong>Core Adiimasa</strong>.</p><div id="operatorApprovalEmail" class="login-note" style="text-align:center;font-weight:700"></div><button class="google-button" type="button" onclick="checkOperatorApproval()">🔄 Cek Persetujuan</button><button type="button" onclick="sellerBooksLogout()" style="width:100%;height:44px;margin-top:10px;border:0;background:#f1f5f9;border-radius:10px;cursor:pointer">Keluar</button><div id="operatorApprovalMessage" class="login-note">Silakan tunggu sampai Core Adiimasa menyetujui akun Operator ini.</div></div><div id="loginStep3" style="display:none"><div style="font-size:42px;text-align:center;margin-bottom:10px">👤</div><h1>Nama Pemilik</h1><p>Persetujuan Operator sudah aktif. Sekarang masukkan <strong>Nama Pemilik</strong> yang sesuai dengan data Owner SellerBooks.</p><label style="display:block;font-size:13px;font-weight:700;margin-top:22px;margin-bottom:8px">Nama Pemilik</label><input id="ownerNameLogin" type="text" autocomplete="organization" placeholder="Contoh: Adiimasa Store" style="width:100%;height:52px;border:1px solid #cbd5e1;border-radius:12px;padding:0 14px;font-size:15px;outline:none"><button class="google-button" type="button" onclick="resolveOwnerWorkspace()">➡️ Masuk ke Import Penjualan</button><button type="button" onclick="sellerBooksLogout()" style="width:100%;height:44px;margin-top:10px;border:0;background:#f1f5f9;border-radius:10px;cursor:pointer">Keluar</button><div id="ownerNameMessage" class="login-note">Nama Pemilik harus sesuai dengan data yang terdaftar di SellerBooks.</div></div></div></section><div id="app"><header class="operator-topbar"><div class="operator-brand"><div class="logo">SB</div><div>SellerBooks <span style="font-weight:500;color:#64748b">• Import Penjualan</span></div></div><div class="operator-user"><span id="operatorEmail"></span><button class="logout" onclick="sellerBooksLogout()">Keluar</button></div></header><main class="app-content"><div class="operator-banner">🔒 <strong>Mode Operator Import.</strong> Data yang tersedia di aplikasi ini hanya yang diperlukan untuk proses import. Dashboard, laba/rugi, HPP, margin, dan laporan tidak tersedia di aplikasi operator.</div><!-- =====================================
+</head><body><div id="sellerBooksDialogOverlay" aria-hidden="true"><div class="sellerbooks-dialog" role="dialog" aria-modal="true" aria-labelledby="sellerBooksDialogTitle"><div class="sellerbooks-dialog-header"><div class="sellerbooks-dialog-icon" id="sellerBooksDialogIcon">✓</div><div class="sellerbooks-dialog-title" id="sellerBooksDialogTitle">SellerBooks</div></div><div class="sellerbooks-dialog-body" id="sellerBooksDialogMessage"></div><div class="sellerbooks-dialog-footer"><button type="button" class="sellerbooks-dialog-button sellerbooks-dialog-ok" id="sellerBooksDialogOk">OK</button></div></div></div><section id="loginPage"><div class="login-card"><div class="login-brand"><div class="logo">SB</div><div><strong>SellerBooks</strong><div style="font-size:11px;color:#64748b;margin-top:3px">IMPORT PENJUALAN</div></div></div><div id="loginStep1"><h1>Login Operator</h1><p>Masuk menggunakan Gmail Operator untuk mengajukan akses ke SellerBooks.</p><button class="google-button" type="button" onclick="loginGoogle()">🔐 Masuk dengan Google</button><div class="login-note">Gunakan Gmail Operator yang berbeda dari Gmail Owner. Setelah login, permintaan akses akan menunggu persetujuan Core Adiimasa.</div></div><div id="loginStep2" style="display:none"><div style="font-size:42px;text-align:center;margin-bottom:10px">⏳</div><h1 style="text-align:center">Menunggu Persetujuan</h1><p style="text-align:center">Akun Gmail Operator Anda sudah login, tetapi belum mendapat persetujuan dari <strong>Core Adiimasa</strong>.</p><div id="operatorApprovalEmail" class="login-note" style="text-align:center;font-weight:700"></div><button class="google-button" type="button" onclick="checkOperatorApproval()">🔄 Cek Persetujuan</button><button type="button" onclick="sellerBooksLogout()" style="width:100%;height:44px;margin-top:10px;border:0;background:#f1f5f9;border-radius:10px;cursor:pointer">Keluar</button><div id="operatorApprovalMessage" class="login-note">Silakan tunggu sampai Core Adiimasa menyetujui akun Operator ini.</div></div><div id="loginStep3" style="display:none"><div style="font-size:42px;text-align:center;margin-bottom:10px">👤</div><h1>Nama Pemilik</h1><p>Persetujuan Operator sudah aktif. Sekarang masukkan <strong>Nama Pemilik</strong> yang sesuai dengan data Owner SellerBooks.</p><label style="display:block;font-size:13px;font-weight:700;margin-top:22px;margin-bottom:8px">Nama Pemilik</label><input id="ownerNameLogin" type="text" autocomplete="organization" placeholder="Contoh: Adiimasa store" style="width:100%;height:52px;border:1px solid #cbd5e1;border-radius:12px;padding:0 14px;font-size:15px;outline:none"><button class="google-button" type="button" onclick="resolveOwnerWorkspace()">➡️ Masuk ke Import Penjualan</button><button type="button" onclick="sellerBooksLogout()" style="width:100%;height:44px;margin-top:10px;border:0;background:#f1f5f9;border-radius:10px;cursor:pointer">Keluar</button><div id="ownerNameMessage" class="login-note">Nama Pemilik harus sesuai dengan data yang terdaftar di SellerBooks.</div></div></div></section><div id="app"><header class="operator-topbar"><div class="operator-brand"><div class="logo">SB</div><div>SellerBooks <span style="font-weight:500;color:#64748b">• Import Penjualan</span></div></div><div class="operator-user"><span id="operatorEmail"></span><button class="logout" onclick="sellerBooksLogout()">Keluar</button></div></header><main class="app-content"><div class="operator-banner">🔒 <strong>Mode Operator Import.</strong> Data yang tersedia di aplikasi ini hanya yang diperlukan untuk proses import. Dashboard, laba/rugi, HPP, margin, dan laporan tidak tersedia di aplikasi operator.</div><!-- =====================================
      IMPORT PENJUALAN
 ===================================== -->
 
@@ -1790,8 +1790,6 @@ const SKU_KEYWORDS = [
     "nomor referensi sku",
 
     "seller sku",
-    "sku seller",
-    "sku blibli",
 
     "product sku",
 
@@ -1842,7 +1840,6 @@ const QTY_KEYWORDS = [
     "product quantity",
     
     "total barang",
-    "total produk",
 
     "item quantity"
 
@@ -1855,10 +1852,10 @@ const QTY_KEYWORDS = [
 ===================================================== */
 const SALES_MARKETPLACE_RULES={
     Shopee:{
-        /* Shopee: file REGULER dan KILAT dapat berbeda posisi kolom.
-           Semua kolom dicari berdasarkan nama header, bukan posisi.
-           Packing WAJIB hanya No. Resi. */
-        required:["nomor referensi sku","no. resi"],
+        /* Shopee REGULER + PENGIRIMAN KILAT:
+           Order ID memakai No. Pesanan, fallback ke Booking SN.
+           Packing tetap No. Resi. */
+        required:["nomor referensi sku","jumlah"],
         packingAliases:["no. resi"],
         orderAliases:["no. pesanan","booking sn"],
         priceAliases:["subtotal pesanan"],
@@ -1874,20 +1871,11 @@ const SALES_MARKETPLACE_RULES={
     },
 
     Blibli:{
-        /* Format Blibli saat ini:
-           Nomor pesanan | SKU Seller | Total produk
-           beserta kolom transaksi Blibli lainnya.
-        */
-        required:["nomor pesanan","sku seller","total produk"],
-        /* Blibli memiliki 2 template:
-           Template 1 -> kolom I: Nomor resi/AWB
-           Template 2 -> kolom L: No. Awb
-           Packing TIDAK memakai Nomor Pesanan/No. Order.
-        */
-        packingAliases:["nomor resi/awb","no. awb"],
-        orderAliases:["nomor pesanan","no. order"],
+        required:["no. order","merchant sku","total barang"],
+        packingAliases:["no. order","no. awb"],
+        orderAliases:["no. order"],
         priceAliases:["harga produk","total harga produk"],
-        dateAliases:["tanggal pesanan","tanggal order"]
+        dateAliases:["tanggal order"]
     },
 
     Toco:{
@@ -1922,7 +1910,7 @@ const SALES_MARKETPLACE_RULES={
     }
 };
 
-function detectSalesMarketplace(headers,fileName){const h=headers.map(normalizeHeader);let best=null,scoreBest=0;Object.keys(SALES_MARKETPLACE_RULES).forEach(function(name){const rule=SALES_MARKETPLACE_RULES[name];let score=0;rule.required.forEach(function(k){if(h.indexOf(normalizeHeader(k))>=0)score+=3;});if(name==="Lazada"&&h.indexOf("lazadaid")>=0)score+=4;if(name==="TikTok"&&h.indexOf("tracking id")>=0)score+=2;if(name==="Shopee"&&h.indexOf("no. pesanan")>=0)score+=4;if(name==="Tokopedia"&&h.indexOf("nomor invoice")>=0)score+=4;if(name==="Blibli"&&(h.indexOf("no. order")>=0||h.indexOf("nomor pesanan")>=0))score+=4;if(name==="Toco"&&h.indexOf("invoice number")>=0)score+=4;if(score>scoreBest){scoreBest=score;best=name;}});if(!best){const n=String(fileName||"").toLowerCase();["Shopee","TikTok","Blibli","Toco","Lazada","Tokopedia"].some(function(x){if(n.includes(x.toLowerCase())){best=x;return true;}return false;});}return {marketplace:best,score:scoreBest};}
+function detectSalesMarketplace(headers,fileName){const h=headers.map(normalizeHeader);let best=null,scoreBest=0;Object.keys(SALES_MARKETPLACE_RULES).forEach(function(name){const rule=SALES_MARKETPLACE_RULES[name];let score=0;rule.required.forEach(function(k){if(h.indexOf(normalizeHeader(k))>=0)score+=3;});if(name==="Lazada"&&h.indexOf("lazadaid")>=0)score+=4;if(name==="TikTok"&&h.indexOf("tracking id")>=0)score+=2;if(name==="Shopee"&&h.indexOf("no. pesanan")>=0)score+=4;if(name==="Tokopedia"&&h.indexOf("nomor invoice")>=0)score+=4;if(name==="Blibli"&&h.indexOf("no. order")>=0)score+=4;if(name==="Toco"&&h.indexOf("invoice number")>=0)score+=4;if(score>scoreBest){scoreBest=score;best=name;}});if(!best){const n=String(fileName||"").toLowerCase();["Shopee","TikTok","Blibli","Toco","Lazada","Tokopedia"].some(function(x){if(n.includes(x.toLowerCase())){best=x;return true;}return false;});}return {marketplace:best,score:scoreBest};}
 function getPackingColumn(data){const rule=SALES_MARKETPLACE_RULES[data.marketplace];if(!rule)return null;for(let i=0;i<rule.packingAliases.length;i++){const c=findAliasColumn(data.headers,[rule.packingAliases[i]]);if(c)return c;}return null;}
 function getFirstValue(row,headers,aliases){const c=findAliasColumn(headers,aliases);if(!c)return "";const i=headers.indexOf(c);return i>=0?row[i]:"";}
 function parseSalesNumber(value){
@@ -1977,27 +1965,16 @@ function parseLazadaUnitPrice(value){
     if(value === null || value === undefined){
         return 0;
     }
-
     if(typeof value === "number"){
         return Number.isFinite(value) ? value : 0;
     }
-
-    let text = String(value)
-        .trim()
-        .replace(/Rp/gi,"")
-        .replace(/\s/g,"");
-
-    if(!text){
-        return 0;
-    }
-
-    /* Lazada: 60000.00 = 60000, bukan 6000000. */
+    let text = String(value).trim().replace(/Rp/gi,"").replace(/\s/g,"");
+    if(!text){ return 0; }
     if(text.includes(",") && text.includes(".")){
         text = text.replace(/,/g,"");
     }else if(text.includes(",")){
         text = text.replace(/,/g,".");
     }
-
     const number = Number(text);
     return Number.isFinite(number) ? number : 0;
 }
@@ -2513,48 +2490,17 @@ async function analyzeSalesFile(input){
                 };
             }
 
-            /* =================================================
-               KHUSUS SHOPEE
-               File REGULER memiliki kolom Jumlah.
-               File KILAT/Advance Fulfilment dapat tidak memiliki
-               kolom Jumlah dan No. Pesanan. Dalam kondisi itu
-               setiap baris SKU dihitung 1 pcs.
-               SKU tetap dicari dari Nomor Referensi SKU.
-            ================================================= */
+            /* KHUSUS SHOPEE KILAT: jika tidak ada kolom Jumlah, 1 baris SKU = 1 pcs. */
             const detectedShopee =
                 detectSalesMarketplace(
                     cleanHeaders,
                     file.name
                 ).marketplace === "Shopee";
-
-            if(detectedShopee){
-
-                const shopeeSkuResult =
-                    findBestColumn(
-                        cleanHeaders,
-                        [
-                            "nomor referensi sku"
-                        ]
-                    );
-
-                if(shopeeSkuResult.column){
-                    skuResult = shopeeSkuResult;
-                }
-
-                const shopeeQtyResult =
-                    findBestColumn(
-                        cleanHeaders,
-                        [
-                            "jumlah"
-                        ]
-                    );
-
-                qtyResult = shopeeQtyResult.column
-                    ? shopeeQtyResult
-                    : {
-                        column:"__SHOPEE_QTY_PER_ROW__",
-                        score:100
-                    };
+            if(detectedShopee && !qtyResult.column){
+                qtyResult = {
+                    column:"__SHOPEE_QTY_PER_ROW__",
+                    score:100
+                };
             }
 
 
@@ -2656,14 +2602,9 @@ async function analyzeSalesFile(input){
                         : -1,
 
                 qtyIndex:
-                    detectedLazada ||
-                    (detectedShopee && qtyResult.column === "__SHOPEE_QTY_PER_ROW__")
+                    detectedLazada
                         ? -1
-                        : (
-                            qtyResult.column
-                                ? cleanHeaders.indexOf(qtyResult.column)
-                                : -1
-                        ),
+                        : (qtyResult.column ? cleanHeaders.indexOf(qtyResult.column) : -1),
 
                 priceColumn:
                     detectedLazada
@@ -4119,6 +4060,68 @@ async function operatorLoadWorkspace(ownerName){
   const who=document.getElementById("operatorEmail"); if(who)who.textContent=(sellerBooksAuthUser?.email||"")+" • "+(sellerBooksOperatorWorkspace.owner_name||ownerName);
 }
 
+let sellerBooksOperatorIdentityGuardTimer=null;
+let sellerBooksOperatorIdentityGuardBusy=false;
+
+function sellerBooksStopOperatorIdentityGuard(){
+  if(sellerBooksOperatorIdentityGuardTimer){
+    clearInterval(sellerBooksOperatorIdentityGuardTimer);
+    sellerBooksOperatorIdentityGuardTimer=null;
+  }
+  sellerBooksOperatorIdentityGuardBusy=false;
+}
+
+function sellerBooksForceOwnerNameStep(message){
+  sellerBooksOperatorWorkspace=null;
+  window.marketplaces=[];
+  window.stores=[];
+  window.products=[];
+  sellerBooksStopOperatorIdentityGuard();
+  showOwnerNameStep();
+  const ownerMsg=document.getElementById("ownerNameMessage");
+  if(ownerMsg)ownerMsg.textContent=message||"Nama Pemilik sudah tidak terdaftar. Masukkan Nama Pemilik yang terdaftar di SellerBooks.";
+}
+
+async function sellerBooksCheckOperatorIdentity(){
+  if(sellerBooksOperatorIdentityGuardBusy || !sellerBooksAuthUser)return;
+  const app=document.getElementById("app");
+  if(!app || app.style.display==="none")return;
+  sellerBooksOperatorIdentityGuardBusy=true;
+  try{
+    const {data,error}=await sellerBooksSupabase.rpc("sellerbooks_operator_identity_status");
+    if(error)throw error;
+    if(!data?.valid){
+      sellerBooksForceOwnerNameStep("Nama Pemilik pada SellerBooks Admin sudah direset atau tidak lagi terdaftar. Masukkan Nama Pemilik yang terdaftar di SellerBooks Admin.");
+      return;
+    }
+    if(sellerBooksOperatorWorkspace){
+      const workspaceOwnerId=String(sellerBooksOperatorWorkspace.owner_user_id||"");
+      const workspaceOwnerName=String(sellerBooksOperatorWorkspace.owner_name||"").trim().toLowerCase();
+      const currentOwnerId=String(data.owner_user_id||"");
+      const currentOwnerName=String(data.owner_name||"").trim().toLowerCase();
+      if(workspaceOwnerId!==currentOwnerId || (workspaceOwnerName && workspaceOwnerName!==currentOwnerName)){
+        sellerBooksForceOwnerNameStep("Nama Pemilik SellerBooks Admin sudah berubah. Masukkan Nama Pemilik yang sesuai dengan data SellerBooks Admin.");
+        return;
+      }
+    }
+  }catch(error){
+    console.error("Pengecekan identitas Operator gagal:",error);
+    /* Fail closed: jika pemeriksaan identitas tidak dapat diverifikasi,
+       Operator tidak boleh tetap berada di workspace/import. */
+    sellerBooksForceOwnerNameStep("Identitas Nama Pemilik tidak dapat diverifikasi. Silakan masukkan kembali Nama Pemilik yang terdaftar di SellerBooks Admin.");
+    return;
+  }finally{
+    sellerBooksOperatorIdentityGuardBusy=false;
+  }
+}
+
+function sellerBooksStartOperatorIdentityGuard(){
+  sellerBooksStopOperatorIdentityGuard();
+  if(!sellerBooksAuthUser)return;
+  sellerBooksCheckOperatorIdentity();
+  sellerBooksOperatorIdentityGuardTimer=setInterval(sellerBooksCheckOperatorIdentity,3000);
+}
+
 async function operatorRestoreSavedWorkspace(){
   const {data,error}=await sellerBooksSupabase.rpc("sellerbooks_operator_workspace");
   if(error) throw error;
@@ -4170,6 +4173,7 @@ async function checkOperatorApproval(){
       try{
         await operatorRestoreSavedWorkspace();
         operatorShowApp();
+        sellerBooksStartOperatorIdentityGuard();
         return;
       }catch(resolveError){
         console.error("Pemulihan workspace Operator gagal:",resolveError);
@@ -4226,6 +4230,7 @@ async function resolveOwnerWorkspace(){
     await operatorLoadWorkspace(ownerName);
     if(msg)msg.textContent="Nama Pemilik sesuai. Membuka Import Penjualan...";
     operatorShowApp();
+    sellerBooksStartOperatorIdentityGuard();
   }catch(e){
     console.error(e);
     const code=String(e?.message||"");
@@ -4256,8 +4261,8 @@ async function operatorInit(){
   operatorShowLogin();
   await checkOperatorApproval();
 }
-async function sellerBooksLogout(){await sellerBooksSupabase.auth.signOut();sellerBooksAuthUser=null;sellerBooksOperatorWorkspace=null;operatorShowLogin();resetSalesImport();}
-sellerBooksSupabase.auth.onAuthStateChange((event,session)=>{if(session?.user){sellerBooksAuthUser=session.user;operatorShowLogin();setTimeout(()=>checkOperatorApproval(),0);}else{sellerBooksAuthUser=null;operatorShowLogin();}});
+async function sellerBooksLogout(){sellerBooksStopOperatorIdentityGuard();await sellerBooksSupabase.auth.signOut();sellerBooksAuthUser=null;sellerBooksOperatorWorkspace=null;operatorShowLogin();resetSalesImport();}
+sellerBooksSupabase.auth.onAuthStateChange((event,session)=>{if(session?.user){sellerBooksAuthUser=session.user;operatorShowLogin();setTimeout(()=>checkOperatorApproval(),0);}else{sellerBooksStopOperatorIdentityGuard();sellerBooksAuthUser=null;sellerBooksOperatorWorkspace=null;operatorShowLogin();}});
 
 function populateSalesStoreAccounts(){
 
@@ -4727,34 +4732,17 @@ updatePreviewColumns();
 
 }
 
-function buildOperatorImportFingerprint(currentImport, storeId, transactions){
-    const marketplace = String(
-        currentImport?.marketplace || ""
-    ).trim().toLowerCase();
-
-    const store = String(storeId || "").trim().toLowerCase();
-
-    const list = (Array.isArray(transactions) ? transactions : [])
-        .map(function(item){
-            return [
-                String(item.sku || "").trim().toLowerCase(),
-                String(item.orderId || "").trim().toLowerCase(),
-                String(item.packingId || "").trim().toLowerCase(),
-                Number(item.qty) || 0,
-                Number(item.salesAmount) || 0
-            ].join("~");
-        })
-        .sort();
-
-    const source = marketplace + "|" + store + "|" + list.join("||");
-
-    let hash = 2166136261;
-    for(let i = 0; i < source.length; i++){
-        hash ^= source.charCodeAt(i);
-        hash = Math.imul(hash, 16777619);
-    }
-
-    return "SBIMP-" + (hash >>> 0).toString(16) + "-" + list.length;
+function buildOperatorImportFingerprint(currentImport, storeId){
+ const marketplace=String(currentImport?.marketplace||"").trim().toLowerCase();
+ const store=String(storeId||"").trim().toLowerCase();
+ const rows=Array.isArray(currentImport?.rawData)?currentImport.rawData:[];
+ let source=marketplace+"|"+store+"|"+JSON.stringify(rows);
+ let hash=2166136261;
+ for(let i=0;i<source.length;i++){
+   hash^=source.charCodeAt(i);
+   hash=Math.imul(hash,16777619);
+ }
+ return "SBOPIMP-"+(hash>>>0).toString(16)+"-"+rows.length;
 }
 
 function getOperatorImportFingerprintStore(){
@@ -4781,64 +4769,22 @@ function saveSalesImportData(){
  if(!store){alert("Pilih akun toko terlebih dahulu.");return null;}
 
  const rows=getCleanSalesRows(currentSalesImport), skuIndex=currentSalesImport.headers.indexOf(currentSalesImport.skuColumn), qtyIndex=currentSalesImport.headers.indexOf(currentSalesImport.qtyColumn), rule=SALES_MARKETPLACE_RULES[currentSalesImport.marketplace];
- /*
-    Jangan menolak file hanya karena fingerprint lokal pernah tersimpan.
-    Data bisa saja sudah dihapus dari Seller Admin dan harus dapat
-    di-import kembali. Server/Supabase menjadi sumber kebenaran untuk
-    menentukan apakah transaksi masih ada.
- */
- const importedAt=new Date().toISOString(), reportDate=getIndonesiaDateString(importedAt);
- const transactions=rows.map((row,rowIndex)=>{
-   const qty=currentSalesImport.marketplace==="Lazada"
-      ? 1
-      : (currentSalesImport.marketplace==="Shopee"&&currentSalesImport.qtyColumn==="__SHOPEE_QTY_PER_ROW__"
-         ? 1
-         : (qtyIndex>=0?parseSalesNumber(row[qtyIndex]):0));
-   const salesAmount=getSalesAmountOperator(row,currentSalesImport);
-   const transactionDate=getSalesTransactionDate(row,currentSalesImport);
-   const transactionSku=skuIndex>=0?String(row[skuIndex]||"").trim():"";
-   const masterProductAtImport=getMasterProductBySku(transactionSku);
-   const rawAdminFeeSku=masterProductAtImport
-      ? masterProductAtImport.adminFeePercent
-      : "";
-   const normalizedAdminFeeSku=Number(rawAdminFeeSku);
-   const adminFeeSkuSnapshot=Number.isFinite(normalizedAdminFeeSku) && normalizedAdminFeeSku > 0
-      ? normalizedAdminFeeSku
-      : "";
-   const priceSnapshot=qty>0
-      ? (Number(salesAmount)||0)/qty
-      : (masterProductAtImport ? (Number(masterProductAtImport.price)||0) : 0);
-   const costSnapshot=masterProductAtImport
-      ? (Number(masterProductAtImport.cost)||0)
-      : 0;
-
-   return {
-      marketplace:currentSalesImport.marketplace,
-      marketplaceId:currentSalesImport.marketplaceId,
-      storeId,
-      storeName:store.name,
-      adminFeeSku:adminFeeSkuSnapshot,
-      adminFeeAccountSnapshot:Number(store.feePercent)||0,
-      adminFeePercent:Number(store.feePercent)||0,
-      adminFeeSkuSnapshot:adminFeeSkuSnapshot,
-      priceSnapshot,
-      costSnapshot,
-      sku:transactionSku,
-      qty,
-      salesAmount,
-      orderId:currentSalesImport.marketplace==="Shopee"
-         ? (String(getFirstValue(row,currentSalesImport.headers,["no. pesanan"])||"").trim() ||
-            String(getFirstValue(row,currentSalesImport.headers,["booking sn"])||"").trim())
-         : (rule?getFirstValue(row,currentSalesImport.headers,rule.orderAliases):""),
-      packingId:rule?getFirstValue(row,currentSalesImport.headers,rule.packingAliases):"",
-      sourceRowIndex:currentSalesImport.marketplace==="Lazada"?rowIndex:null,
-      transactionDate,
-      reportDate,
-      importedAt
-   };
+ const importFingerprint=buildOperatorImportFingerprint(currentSalesImport,storeId);
+ const alreadyUploaded=getOperatorImportFingerprintStore().some(function(item){
+   return String(item.fingerprint||"")===String(importFingerprint)
+      && String(item.storeId||"")===String(storeId||"")
+      && String(item.marketplace||"").toLowerCase()===String(currentSalesImport.marketplace||"").toLowerCase();
  });
- const importFingerprint=buildOperatorImportFingerprint(currentSalesImport,storeId,transactions);
- const payload={contractVersion:"SELLERBOOKS_AUTOSYNC_V1",fileName:currentSalesImport.fileName,fileType:currentSalesImport.fileType,marketplace:currentSalesImport.marketplace,marketplaceId:currentSalesImport.marketplaceId,storeId,skuColumn:currentSalesImport.skuColumn,qtyColumn:currentSalesImport.qtyColumn,importFingerprint,transactions};
+ if(alreadyUploaded){
+   alert("Data penjualan gagal disimpan.\n\nFile yang sama sudah pernah diupload sebelumnya.");
+   return null;
+ }
+ const importedAt=new Date().toISOString(), reportDate=getIndonesiaDateString(importedAt);
+ const transactions=rows.map((row,rowIndex)=>({marketplace:currentSalesImport.marketplace,marketplaceId:currentSalesImport.marketplaceId,storeId,storeName:store.name,sku:skuIndex>=0?String(row[skuIndex]||"").trim():"",qty:currentSalesImport.marketplace==="Lazada"?1:(currentSalesImport.marketplace==="Shopee"&&currentSalesImport.qtyColumn==="__SHOPEE_QTY_PER_ROW__"?1:(qtyIndex>=0?parseSalesNumber(row[qtyIndex]):0)),salesAmount:getSalesAmountOperator(row,currentSalesImport),orderId:currentSalesImport.marketplace==="Shopee"
+ ? (String(getFirstValue(row,currentSalesImport.headers,["no. pesanan"])||"").trim()
+    || String(getFirstValue(row,currentSalesImport.headers,["booking sn"])||"").trim())
+ : (rule?getFirstValue(row,currentSalesImport.headers,rule.orderAliases):""),packingId:currentSalesImport.marketplace==="Lazada"&&rule?getFirstValue(row,currentSalesImport.headers,rule.packingAliases):(currentSalesImport.marketplace==="Shopee"?getFirstValue(row,currentSalesImport.headers,["no. resi"]):""),sourceRowIndex:currentSalesImport.marketplace==="Lazada"?rowIndex:null,transactionDate:getSalesTransactionDate(row,currentSalesImport),reportDate,importedAt}));
+ const payload={fileName:currentSalesImport.fileName,fileType:currentSalesImport.fileType,marketplace:currentSalesImport.marketplace,marketplaceId:currentSalesImport.marketplaceId,storeId,skuColumn:currentSalesImport.skuColumn,qtyColumn:currentSalesImport.qtyColumn,importFingerprint,transactions};
  return payload;
 }
 function getSalesAmountOperator(row,data){
@@ -4846,22 +4792,7 @@ function getSalesAmountOperator(row,data){
  if(data.marketplace==="Lazada")return parseLazadaUnitPrice(row[47])*qty;
  if(data.marketplace==="TikTok")return parseSalesNumber(row[15]);
  if(data.marketplace==="Shopee"){const rule=SALES_MARKETPLACE_RULES[data.marketplace];const subtotal=parseSalesNumber(getFirstValue(row,data.headers,rule.priceAliases));if(subtotal>0)return subtotal;const product=getMasterProductBySku(sku);return product?(Number(product.price)||0)*qty:0;}
- if(data.marketplace==="Blibli"){
-  /*
-     SAMA DENGAN IMPORT ADMIN:
-     Blibli memiliki 2 format file. Harga jual diambil dari
-     header "Harga produk" (format 1: kolom I, format 2: kolom W).
-     Jika header tidak ditemukan, gunakan fallback posisi yang sama
-     dengan Admin agar hasil import Operator identik.
-  */
-  const blibliPriceIndex=data.headers.findIndex(function(header){
-    return normalizeHeader(header)==="harga produk";
-  });
-  const fallbackPriceIndex=blibliPriceIndex>=0
-    ? blibliPriceIndex
-    : (row.length>22 && row[22]!=="" ? 22 : 8);
-  return parseSalesNumber(row[fallbackPriceIndex])*qty;
- }
+ if(data.marketplace==="Blibli")return parseSalesNumber(row[8])*qty;
  const product=getMasterProductBySku(sku);return product?(Number(product.price)||0)*qty:0;
 }
 
@@ -4901,8 +4832,17 @@ async function commitOperatorImport(){
    }
    closeSalesPreview();
    resetSalesImport();
- }catch(e){console.error(e);alert("❌ Import gagal disimpan ke SellerBooks.\n\n"+e.message);}
- finally{if(btn)btn.disabled=false;}
+ }catch(e){
+   console.error(e);
+   const code=String(e?.message||"");
+   if(code.includes("OPERATOR_OWNER_IDENTITY_RESET") || code.includes("OPERATOR_OWNER_IDENTITY_CHANGED") || code.includes("OPERATOR_NOT_ASSIGNED") || code.includes("OWNER_NAME_BINDING_CHANGED")){
+      sellerBooksForceOwnerNameStep("Nama Pemilik pada SellerBooks Admin sudah berubah atau direset. Import ditolak. Masukkan kembali Nama Pemilik yang terdaftar di SellerBooks Admin.");
+      closeSalesPreview();
+      resetSalesImport();
+      return;
+   }
+   alert("❌ Import gagal disimpan ke SellerBooks.\n\n"+e.message);
+ }finally{if(btn)btn.disabled=false;}
 }
 // Override the original confirmation handler with the secure server-backed version.
 function confirmSalesColumns(){
@@ -4910,13 +4850,7 @@ function confirmSalesColumns(){
  const isLazada=currentSalesImport && currentSalesImport.marketplace==="Lazada";
  const isShopeeQtyPerRow=currentSalesImport && currentSalesImport.marketplace==="Shopee" && currentSalesImport.qtyColumn==="__SHOPEE_QTY_PER_ROW__";
  if(!sku||(!qty&&!isLazada&&!isShopeeQtyPerRow)){alert(isLazada||isShopeeQtyPerRow?"Pilih kolom SKU terlebih dahulu.":"Pilih kolom SKU dan QTY terlebih dahulu.");return;}
- if(!isLazada&&!isShopeeQtyPerRow&&sku===qty){alert("Kolom SKU dan QTY tidak boleh sama.");return;}
- currentSalesImport.skuColumn=sku;
- currentSalesImport.qtyColumn=isLazada?"__LAZADA_QTY_BY_SELLERSKU__":(isShopeeQtyPerRow?"__SHOPEE_QTY_PER_ROW__":qty);
- currentSalesImport.skuIndex=currentSalesImport.headers.indexOf(sku);
- currentSalesImport.qtyIndex=(isLazada||isShopeeQtyPerRow)?-1:currentSalesImport.headers.indexOf(qty);
- updatePreviewColumns();
- commitOperatorImport();
+ currentSalesImport.skuColumn=sku;currentSalesImport.qtyColumn=isLazada?"__LAZADA_QTY_BY_SELLERSKU__":(isShopeeQtyPerRow?"__SHOPEE_QTY_PER_ROW__":qty);currentSalesImport.skuIndex=currentSalesImport.headers.indexOf(sku);currentSalesImport.qtyIndex=(isLazada||isShopeeQtyPerRow)?-1:currentSalesImport.headers.indexOf(qty);updatePreviewColumns();commitOperatorImport();
 }
 
 window.addEventListener("load",operatorInit);
