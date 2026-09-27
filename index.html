@@ -4936,15 +4936,13 @@ function saveSalesImportData(){
 
  const rows=getCleanSalesRows(currentSalesImport), skuIndex=currentSalesImport.headers.indexOf(currentSalesImport.skuColumn), qtyIndex=currentSalesImport.headers.indexOf(currentSalesImport.qtyColumn), rule=SALES_MARKETPLACE_RULES[currentSalesImport.marketplace];
  const importFingerprint=buildOperatorImportFingerprint(currentSalesImport,storeId);
- const alreadyUploaded=getOperatorImportFingerprintStore().some(function(item){
-   return String(item.fingerprint||"")===String(importFingerprint)
-      && String(item.storeId||"")===String(storeId||"")
-      && String(item.marketplace||"").toLowerCase()===String(currentSalesImport.marketplace||"").toLowerCase();
- });
- if(alreadyUploaded){
-   alert("Data penjualan gagal disimpan.\n\nFile yang sama sudah pernah diupload sebelumnya.");
-   return null;
- }
+ /*
+   DUPLICATE CHECK TIDAK LAGI MENGGUNAKAN localStorage.
+   Sumber kebenaran adalah database/server AutoSync.
+   Dengan begitu, jika laporan dihapus oleh Admin, file yang sama
+   boleh diimport kembali. Jika laporan masih ada, backend tetap
+   melakukan pemeriksaan transaksi duplikat.
+ */
  const importedAt=new Date().toISOString(), reportDate=getIndonesiaDateString(importedAt);
  const transactions=rows.map((row,rowIndex)=>({marketplace:currentSalesImport.marketplace,marketplaceId:currentSalesImport.marketplaceId,storeId,storeName:store.name,sku:skuIndex>=0?String(row[skuIndex]||"").trim():"",qty:currentSalesImport.marketplace==="Lazada"?1:(currentSalesImport.marketplace==="Shopee"&&currentSalesImport.qtyColumn==="__SHOPEE_QTY_PER_ROW__"?1:(qtyIndex>=0?parseSalesNumber(row[qtyIndex]):0)),salesAmount:getSalesAmountOperator(row,currentSalesImport),orderId:currentSalesImport.marketplace==="Shopee"
  ? (String(getFirstValue(row,currentSalesImport.headers,["no. pesanan"])||"").trim()
