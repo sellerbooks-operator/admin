@@ -4050,7 +4050,60 @@ function closeSalesPreview(){
 }
 const SELLERBOOKS_SUPABASE_URL="https://fysaxpqpqexjnlpkbwap.supabase.co";
 const SELLERBOOKS_SUPABASE_KEY="sb_publishable_DWRaEZTcNMjhglwN3nqCOw_pua8rsjD";
-const sellerBooksSupabase=window.supabase.createClient(SELLERBOOKS_SUPABASE_URL,SELLERBOOKS_SUPABASE_KEY);
+let sellerBooksSupabase=null;
+let sellerBooksAuthListenerBound=false;
+
+async function sellerBooksEnsureSupabase(){
+  if(sellerBooksSupabase?.auth)return sellerBooksSupabase;
+
+  if(!window.supabase || typeof window.supabase.createClient!=="function"){
+    const load=(src)=>new Promise((resolve,reject)=>{
+      const s=document.createElement("script");
+      s.src=src;
+      s.async=false;
+      s.onload=()=>resolve();
+      s.onerror=()=>reject(new Error("Gagal memuat Supabase SDK: "+src));
+      document.head.appendChild(s);
+    });
+
+    try{
+      await load("https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2");
+    }catch(e){
+      try{
+        await load("https://unpkg.com/@supabase/supabase-js@2");
+      }catch(e2){
+        throw new Error("Library Supabase tidak dapat dimuat. Periksa koneksi internet lalu buka ulang SellerBooks Operator.");
+      }
+    }
+  }
+
+  if(!window.supabase || typeof window.supabase.createClient!=="function"){
+    throw new Error("Supabase SDK belum tersedia.");
+  }
+
+  sellerBooksSupabase=window.supabase.createClient(
+    SELLERBOOKS_SUPABASE_URL,
+    SELLERBOOKS_SUPABASE_KEY
+  );
+
+  if(!sellerBooksAuthListenerBound){
+    sellerBooksAuthListenerBound=true;
+    sellerBooksSupabase.auth.onAuthStateChange((event,session)=>{
+      if(session?.user){
+        sellerBooksAuthUser=session.user;
+        operatorShowLogin();
+        setTimeout(()=>checkOperatorApproval(),0);
+      }else{
+        sellerBooksStopOperatorIdentityGuard();
+        sellerBooksAuthUser=null;
+        sellerBooksOperatorWorkspace=null;
+        operatorShowLogin();
+      }
+    });
+  }
+
+  return sellerBooksSupabase;
+}
 let sellerBooksAuthUser=null;
 let sellerBooksOperatorWorkspace=null;
 let currentSalesImport=null;
@@ -4225,9 +4278,7 @@ function operatorShowLogin(){
 }
 async function loginGoogle(){
   try{
-    if(!window.supabase || !sellerBooksSupabase){
-      throw new Error("Library Supabase belum termuat. Silakan refresh halaman.");
-    }
+    await sellerBooksEnsureSupabase();
 
     const redirectTo =
       location.protocol === "http:" || location.protocol === "https:"
@@ -4476,6 +4527,14 @@ async function resolveOwnerWorkspace(){
   }
 }
 async function operatorInit(){
+  try{
+    await sellerBooksEnsureSupabase();
+  }catch(e){
+    console.error("SellerBooks Operator Supabase init:",e);
+    operatorShowLogin();
+    return;
+  }
+
   const {data,error}=await sellerBooksSupabase.auth.getSession();
   if(error){console.error(error);return operatorShowLogin();}
   if(!data?.session?.user)return operatorShowLogin();
@@ -4483,8 +4542,15 @@ async function operatorInit(){
   operatorShowLogin();
   await checkOperatorApproval();
 }
-async function sellerBooksLogout(){sellerBooksStopOperatorIdentityGuard();await sellerBooksSupabase.auth.signOut();sellerBooksAuthUser=null;sellerBooksOperatorWorkspace=null;operatorShowLogin();resetSalesImport();}
-sellerBooksSupabase.auth.onAuthStateChange((event,session)=>{if(session?.user){sellerBooksAuthUser=session.user;operatorShowLogin();setTimeout(()=>checkOperatorApproval(),0);}else{sellerBooksStopOperatorIdentityGuard();sellerBooksAuthUser=null;sellerBooksOperatorWorkspace=null;operatorShowLogin();}});
+async function sellerBooksLogout(){
+  try{await sellerBooksEnsureSupabase();}catch(e){}
+  sellerBooksStopOperatorIdentityGuard();
+  if(sellerBooksSupabase?.auth)await sellerBooksSupabase.auth.signOut();
+  sellerBooksAuthUser=null;
+  sellerBooksOperatorWorkspace=null;
+  operatorShowLogin();
+  resetSalesImport();
+}
 
 function populateSalesStoreAccounts(){
 
