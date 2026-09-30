@@ -4224,8 +4224,49 @@ function operatorShowLogin(){
   const em=document.getElementById("operatorApprovalEmail"); if(em) em.textContent=sellerBooksAuthUser.email||"";
 }
 async function loginGoogle(){
-  const {error}=await sellerBooksSupabase.auth.signInWithOAuth({provider:"google",options:{redirectTo:location.origin+location.pathname,queryParams:{prompt:"select_account"}}});
-  if(error)alert("Login Google gagal.\n\n"+error.message);
+  try{
+    if(!window.supabase || !sellerBooksSupabase){
+      throw new Error("Library Supabase belum termuat. Silakan refresh halaman.");
+    }
+
+    const redirectTo =
+      location.protocol === "http:" || location.protocol === "https:"
+        ? location.origin + location.pathname
+        : null;
+
+    const options = {
+      queryParams:{prompt:"select_account"}
+    };
+
+    if(redirectTo){
+      options.redirectTo = redirectTo;
+    }
+
+    const {data,error} =
+      await sellerBooksSupabase.auth.signInWithOAuth({
+        provider:"google",
+        options:options
+      });
+
+    if(error){
+      throw error;
+    }
+
+    /*
+       Fallback untuk WebView/PWA:
+       jika Supabase mengembalikan URL OAuth tetapi browser/WebView
+       tidak melakukan navigasi otomatis, arahkan secara eksplisit.
+    */
+    if(data && data.url){
+      window.location.assign(data.url);
+    }
+  }catch(error){
+    console.error("SellerBooks Operator Google Login:",error);
+    alert(
+      "Login Google gagal.\n\n" +
+      String(error?.message || error || "Silakan coba lagi.")
+    );
+  }
 }
 function showOwnerNameStep(){
   document.getElementById("loginStep1").style.display="none";
