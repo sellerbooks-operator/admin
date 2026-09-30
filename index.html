@@ -4976,20 +4976,49 @@ function getSalesAmountOperator(row,data){
  const skuIndex=data.skuIndex!=null?data.skuIndex:data.headers.indexOf(data.skuColumn);
  const qtyIndex=data.qtyIndex!=null?data.qtyIndex:data.headers.indexOf(data.qtyColumn);
  const sku=skuIndex>=0?String(row[skuIndex]||"").trim():"";
- const qty=data.marketplace==="Lazada"||(data.marketplace==="Shopee"&&data.qtyColumn==="__SHOPEE_QTY_PER_ROW__")?1:(qtyIndex>=0?parseSalesNumber(row[qtyIndex]):0);
- if(data.marketplace==="Lazada")return parseLazadaUnitPrice(row[47])*qty;
- if(data.marketplace==="TikTok")return parseSalesNumber(row[15]);
+ const qty=data.marketplace==="Lazada"||(data.marketplace==="Shopee"&&data.qtyColumn==="__SHOPEE_QTY_PER_ROW__")
+   ? 1
+   : (qtyIndex>=0?parseSalesNumber(row[qtyIndex]):0);
+
+ if(data.marketplace==="Lazada"){
+   return parseLazadaUnitPrice(row[47])*qty;
+ }
+
+ if(data.marketplace==="TikTok"){
+   return parseSalesNumber(row[15]);
+ }
+
  if(data.marketplace==="Shopee"){
    const rule=SALES_MARKETPLACE_RULES[data.marketplace];
    const marketplacePrice=getFirstValue(row,data.headers,rule&&rule.priceAliases?rule.priceAliases:[]);
    const subtotal=parseSalesNumber(marketplacePrice);
    if(subtotal>0)return subtotal;
+
    const product=getMasterProductBySku(sku);
    return (product?(Number(product.price)||0):0)*qty;
  }
- if(data.marketplace==="Blibli")return parseSalesNumber(row[8])*qty;
+
+ if(data.marketplace==="Blibli"){
+   /*
+      SAMA DENGAN ADMIN:
+      Jangan mengunci harga Blibli ke row[8].
+      Template Blibli dapat menempatkan "Harga produk"
+      pada kolom I atau W. Gunakan HEADER sebagai sumber utama.
+      Jika header tidak tersedia, pertahankan fallback I/W.
+   */
+   const blibliPriceIndex=data.headers.findIndex(function(header){
+     return normalizeHeader(header)==="harga produk";
+   });
+
+   const fallbackPriceIndex=blibliPriceIndex>=0
+     ? blibliPriceIndex
+     : (row.length>22 && row[22]!=="" ? 22 : 8);
+
+   return parseSalesNumber(row[fallbackPriceIndex])*qty;
+ }
+
  const product=getMasterProductBySku(sku);
- return product?(Number(product.price)||0)*qty:0;
+ return product?(Number(product.price)||0)*qty;
 }
 
 async function commitOperatorImport(){
