@@ -177,7 +177,7 @@ public partial class MainWindow : Window
     {
         if (Browser.CoreWebView2 is null) return;
         ShowLoading();
-        try { Browser.CoreWebView2.Navigate(AppUrl); } catch { ShowOffline(); }
+        try { Browser.CoreWebView2.Navigate(AppUrl + "?desktop=1&oauth_port=" + _oauthPort); } catch { ShowOffline(); }
     }
 
     private void ShowLoading()
