@@ -5084,82 +5084,388 @@ function saveOperatorImportFingerprint(fingerprint,storeId,marketplace){
 }
 
 function saveSalesImportData(){
- if(!currentSalesImport)return null;
- const storeId=document.getElementById("salesStoreAccount")?.value||"";
- const store=(stores||[]).find(x=>String(x.id)===String(storeId));
- if(!store){alert("Pilih akun toko terlebih dahulu.");return null;}
 
- const rows=getCleanSalesRows(currentSalesImport), skuIndex=currentSalesImport.headers.indexOf(currentSalesImport.skuColumn), qtyIndex=currentSalesImport.headers.indexOf(currentSalesImport.qtyColumn), rule=SALES_MARKETPLACE_RULES[currentSalesImport.marketplace];
- const importFingerprint=buildOperatorImportFingerprint(currentSalesImport,storeId);
- /*
-   DUPLICATE CHECK TIDAK LAGI MENGGUNAKAN localStorage.
-   Sumber kebenaran adalah database/server AutoSync.
-   Dengan begitu, jika laporan dihapus oleh Admin, file yang sama
-   boleh diimport kembali. Jika laporan masih ada, backend tetap
-   melakukan pemeriksaan transaksi duplikat.
- */
- const importedAt=new Date().toISOString(), reportDate=getIndonesiaDateString(importedAt);
- const transactions=rows.map((row,rowIndex)=>({marketplace:currentSalesImport.marketplace,marketplaceId:currentSalesImport.marketplaceId,storeId,storeName:store.name,sku:skuIndex>=0?String(row[skuIndex]||"").trim():"",qty:currentSalesImport.marketplace==="Lazada"?1:(currentSalesImport.marketplace==="Shopee"&&currentSalesImport.qtyColumn==="__SHOPEE_QTY_PER_ROW__"?1:(qtyIndex>=0?parseSalesNumber(row[qtyIndex]):0)),salesAmount:getSalesAmountOperator(row,currentSalesImport),orderId:currentSalesImport.marketplace==="Shopee"
- ? (String(getFirstValue(row,currentSalesImport.headers,["no. pesanan"])||"").trim()
-    || String(getFirstValue(row,currentSalesImport.headers,["booking sn"])||"").trim())
- : (rule?getFirstValue(row,currentSalesImport.headers,rule.orderAliases):""),packingId:rule
-    ?getFirstValue(
-        row,
-        currentSalesImport.headers,
-        rule.packingAliases
-    )
-    :"",sourceRowIndex:currentSalesImport.marketplace==="Lazada"?rowIndex:null,transactionDate:getSalesTransactionDate(row,currentSalesImport),reportDate,importedAt}));
- const payload={contractVersion:"SELLERBOOKS_AUTOSYNC_V1",fileName:currentSalesImport.fileName,fileType:currentSalesImport.fileType,marketplace:currentSalesImport.marketplace,marketplaceId:currentSalesImport.marketplaceId,storeId,skuColumn:currentSalesImport.skuColumn,qtyColumn:currentSalesImport.qtyColumn,importFingerprint,transactions};
- return payload;
+    if(!currentSalesImport){
+        return null;
+    }
+
+    const storeId =
+        document.getElementById("salesStoreAccount")?.value || "";
+
+    const store =
+        (stores || []).find(function(x){
+            return String(x.id) === String(storeId);
+        });
+
+    if(!store){
+        alert("Pilih akun toko terlebih dahulu.");
+        return null;
+    }
+
+    const rows =
+        getCleanSalesRows(
+            currentSalesImport
+        );
+
+    const skuIndex =
+        currentSalesImport.headers.indexOf(
+            currentSalesImport.skuColumn
+        );
+
+    const qtyIndex =
+        currentSalesImport.headers.indexOf(
+            currentSalesImport.qtyColumn
+        );
+
+    const rule =
+        SALES_MARKETPLACE_RULES[
+            currentSalesImport.marketplace
+        ];
+
+    const packing =
+        calculateUniquePacking(
+            currentSalesImport
+        );
+
+    const packingIndex =
+        packing.column
+            ? currentSalesImport.headers.indexOf(
+                packing.column
+            )
+            : -1;
+
+    const importedAt =
+        new Date().toISOString();
+
+    const reportDate =
+        getIndonesiaDateString(importedAt);
+
+    /*
+       PENTING:
+       Payload Operator sekarang mengikuti struktur transaksi Admin.
+       Perhitungan penjualan tetap berasal dari getSalesAmountOperator()
+       yang sudah diselaraskan 1:1 dengan getSalesAmount() Admin.
+       Operator tidak menyimpan laporan lokal; payload diteruskan ke RPC.
+    */
+    const transactions =
+        rows.map(function(row,rowIndex){
+
+            const qty =
+                currentSalesImport.marketplace === "Lazada"
+                    ? 1
+                    : (
+                        currentSalesImport.marketplace === "Shopee" &&
+                        currentSalesImport.qtyColumn === "__SHOPEE_QTY_PER_ROW__"
+                            ? 1
+                            : (
+                                qtyIndex >= 0
+                                    ? parseSalesNumber(
+                                        row[qtyIndex]
+                                    )
+                                    : 0
+                            )
+                    );
+
+            const salesAmount =
+                getSalesAmountOperator(
+                    row,
+                    currentSalesImport
+                );
+
+            const transactionDate =
+                getSalesTransactionDate(
+                    row,
+                    currentSalesImport
+                );
+
+            const transactionSku =
+                skuIndex >= 0
+                    ? String(
+                        row[skuIndex] || ""
+                    ).trim()
+                    : "";
+
+            const masterProductAtImport =
+                getMasterProductBySku(
+                    transactionSku
+                );
+
+            const adminFeeSkuSnapshot =
+                masterProductAtImport &&
+                masterProductAtImport.adminFeePercent !== undefined &&
+                masterProductAtImport.adminFeePercent !== null &&
+                masterProductAtImport.adminFeePercent !== ""
+                    ? Number(
+                        masterProductAtImport.adminFeePercent
+                    )
+                    : "";
+
+            const priceSnapshot =
+                qty > 0
+                    ? (
+                        (Number(salesAmount) || 0) /
+                        qty
+                    )
+                    : (
+                        masterProductAtImport
+                            ? (Number(masterProductAtImport.price) || 0)
+                            : 0
+                    );
+
+            const costSnapshot =
+                masterProductAtImport
+                    ? (Number(masterProductAtImport.cost) || 0)
+                    : 0;
+
+            return {
+                marketplace:
+                    currentSalesImport.marketplace,
+
+                marketplaceId:
+                    currentSalesImport.marketplaceId,
+
+                storeId:
+                    storeId,
+
+                storeName:
+                    store.name,
+
+                /* Admin % SKU transaksi */
+                adminFeeSku:
+                    adminFeeSkuSnapshot,
+
+                /* Snapshot Admin % Akun saat import */
+                adminFeeAccountSnapshot:
+                    Number(store.feePercent) || 0,
+
+                /* Field lama, dipertahankan untuk kompatibilitas */
+                adminFeePercent:
+                    Number(store.feePercent) || 0,
+
+                /* Snapshot Admin % SKU saat import */
+                adminFeeSkuSnapshot:
+                    adminFeeSkuSnapshot,
+
+                /* Snapshot harga transaksi saat import */
+                priceSnapshot:
+                    priceSnapshot,
+
+                /* Snapshot HPP saat import */
+                costSnapshot:
+                    costSnapshot,
+
+                sku:
+                    transactionSku,
+
+                qty:
+                    qty,
+
+                salesAmount:
+                    salesAmount,
+
+                orderId:
+                    currentSalesImport.marketplace === "Shopee"
+                        ? (
+                            String(
+                                getFirstValue(
+                                    row,
+                                    currentSalesImport.headers,
+                                    ["no. pesanan"]
+                                ) || ""
+                            ).trim()
+                            ||
+                            String(
+                                getFirstValue(
+                                    row,
+                                    currentSalesImport.headers,
+                                    ["booking sn"]
+                                ) || ""
+                            ).trim()
+                        )
+                        : (
+                            rule
+                                ? getFirstValue(
+                                    row,
+                                    currentSalesImport.headers,
+                                    rule.orderAliases
+                                )
+                                : ""
+                        ),
+
+                packingId:
+                    packingIndex >= 0
+                        ? String(
+                            row[packingIndex] || ""
+                        ).trim()
+                        : "",
+
+                transactionDate:
+                    transactionDate,
+
+                reportDate:
+                    reportDate,
+
+                /* Sama dengan Admin: Lazada memakai row index
+                   agar SKU/order yang sama pada baris berbeda
+                   tetap dapat dibedakan. */
+                sourceRowIndex:
+                    currentSalesImport.marketplace === "Lazada"
+                        ? rowIndex
+                        : null,
+
+                importedAt:
+                    importedAt
+            };
+        });
+
+    /*
+       Fingerprint dibuat dari TRANSAKSI final, sama seperti Admin.
+       Ini penting agar perubahan salesAmount/QTY ikut membedakan
+       isi import dan tidak memakai fingerprint kosong/awal.
+    */
+    const importFingerprint =
+        buildOperatorImportFingerprint(
+            currentSalesImport,
+            storeId,
+            transactions
+        );
+
+    const payload = {
+        contractVersion:
+            "SELLERBOOKS_AUTOSYNC_V1",
+
+        fileName:
+            currentSalesImport.fileName,
+
+        fileType:
+            currentSalesImport.fileType,
+
+        marketplace:
+            currentSalesImport.marketplace,
+
+        marketplaceId:
+            currentSalesImport.marketplaceId,
+
+        storeId:
+            storeId,
+
+        skuColumn:
+            currentSalesImport.skuColumn,
+
+        qtyColumn:
+            currentSalesImport.qtyColumn,
+
+        importFingerprint:
+            importFingerprint,
+
+        transactions:
+            transactions
+    };
+
+    return payload;
 }
+
+
 function getSalesAmountOperator(row,data){
- const skuIndex=data.skuIndex!=null?data.skuIndex:data.headers.indexOf(data.skuColumn);
- const qtyIndex=data.qtyIndex!=null?data.qtyIndex:data.headers.indexOf(data.qtyColumn);
- const sku=skuIndex>=0?String(row[skuIndex]||"").trim():"";
- const qty=data.marketplace==="Lazada"||(data.marketplace==="Shopee"&&data.qtyColumn==="__SHOPEE_QTY_PER_ROW__")
-   ? 1
-   : (qtyIndex>=0?parseSalesNumber(row[qtyIndex]):0);
 
- if(data.marketplace==="Lazada"){
-   return parseLazadaUnitPrice(row[47])*qty;
- }
+    const skuIndex =
+        data.skuIndex != null
+            ? data.skuIndex
+            : data.headers.indexOf(
+                data.skuColumn
+            );
 
- if(data.marketplace==="TikTok"){
-   return parseSalesNumber(row[15]);
- }
+    const qtyIndex =
+        data.qtyIndex != null
+            ? data.qtyIndex
+            : data.headers.indexOf(
+                data.qtyColumn
+            );
 
- if(data.marketplace==="Shopee"){
-   const rule=SALES_MARKETPLACE_RULES[data.marketplace];
-   const marketplacePrice=getFirstValue(row,data.headers,rule&&rule.priceAliases?rule.priceAliases:[]);
-   const subtotal=parseSalesNumber(marketplacePrice);
-   if(subtotal>0)return subtotal;
+    const sku =
+        skuIndex >= 0
+            ? String(
+                row[skuIndex] || ""
+            ).trim()
+            : "";
 
-   const product=getMasterProductBySku(sku);
-   return (product?(Number(product.price)||0):0)*qty;
- }
+    const qty =
+        data.marketplace === "Lazada" ||
+        (data.marketplace === "Shopee" && data.qtyColumn === "__SHOPEE_QTY_PER_ROW__")
+            ? 1
+            : (
+                qtyIndex >= 0
+                    ? parseSalesNumber(
+                        row[qtyIndex]
+                    )
+                    : 0
+            );
 
- if(data.marketplace==="Blibli"){
-   /*
-      SAMA DENGAN ADMIN:
-      Jangan mengunci harga Blibli ke row[8].
-      Template Blibli dapat menempatkan "Harga produk"
-      pada kolom I atau W. Gunakan HEADER sebagai sumber utama.
-      Jika header tidak tersedia, pertahankan fallback I/W.
-   */
-   const blibliPriceIndex=data.headers.findIndex(function(header){
-     return normalizeHeader(header)==="harga produk";
-   });
+    if(data.marketplace === "Lazada"){
+        /* Lazada: Harga Jual wajib dari kolom AV (unitPrice). */
+        return parseLazadaUnitPrice(row[47]) * qty;
+    }
 
-   const fallbackPriceIndex=blibliPriceIndex>=0
-     ? blibliPriceIndex
-     : (row.length>22 && row[22]!=="" ? 22 : 8);
+    if(data.marketplace === "TikTok"){
+        return parseSalesNumber(row[15]);
+    }
 
-   return parseSalesNumber(row[fallbackPriceIndex])*qty;
- }
+    if(data.marketplace === "Shopee"){
+        const rule =
+            SALES_MARKETPLACE_RULES[data.marketplace];
 
- const product=getMasterProductBySku(sku);
- return product?(Number(product.price)||0)*qty;
+        const marketplacePrice =
+            getFirstValue(
+                row,
+                data.headers,
+                rule && rule.priceAliases ? rule.priceAliases : []
+            );
+
+        /* Sama persis dengan Admin:
+           Subtotal Pesanan > 0 menjadi sumber utama.
+           Jika kosong/0, fallback Master Produk x QTY. */
+        const subtotal = parseSalesNumber(marketplacePrice);
+
+        if(subtotal > 0){
+            return subtotal;
+        }
+
+        const product = getMasterProductBySku(sku);
+        const masterPrice = product
+            ? (Number(product.price) || 0)
+            : 0;
+
+        return masterPrice * qty;
+    }
+
+    if(data.marketplace === "Blibli"){
+        /* Sama dengan Admin: cari "Harga produk" berdasarkan HEADER,
+           lalu fallback ke W/I bila header tidak tersedia. */
+        const blibliPriceIndex = data.headers.findIndex(function(header){
+            return normalizeHeader(header) === "harga produk";
+        });
+
+        const fallbackPriceIndex = blibliPriceIndex >= 0
+            ? blibliPriceIndex
+            : (
+                row.length > 22 && row[22] !== "" ? 22 :
+                8
+            );
+
+        return parseSalesNumber(row[fallbackPriceIndex]) * qty;
+    }
+
+    const product = getMasterProductBySku(sku);
+
+    /* Sama dengan Admin untuk marketplace lain:
+       SKU tidak ditemukan = sales Rp0, bukan angka buatan. */
+    if(!product){
+        return 0;
+    }
+
+    return (Number(product.price) || 0) * qty;
 }
+
 
 async function commitOperatorImport(){
  try{
