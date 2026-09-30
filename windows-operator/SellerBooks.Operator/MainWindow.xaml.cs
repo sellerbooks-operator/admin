@@ -3,6 +3,10 @@ using Microsoft.Win32;
 using System.ComponentModel;
 using System.IO;
 using System.Net.NetworkInformation;
+using System.Net;
+using System.Net.Sockets;
+using System.Diagnostics;
+using System.Text;
 using System.Windows;
 using System.Windows.Threading;
 
@@ -14,6 +18,11 @@ public partial class MainWindow : Window
     private readonly string _userDataFolder;
     private readonly DispatcherTimer _networkTimer;
     private bool _offline;
+    private TcpListener? _oauthListener;
+    private CancellationTokenSource? _oauthCts;
+    private int _oauthPort;
+
+    private const string OAuthCallbackPath = "/oauth-callback";
 
     public MainWindow()
     {
@@ -42,10 +51,11 @@ public partial class MainWindow : Window
                 return;
             }
 
+            _oauthPort = StartOAuthListener();
             var environment = await CoreWebView2Environment.CreateAsync(null, _userDataFolder, null);
             await Browser.EnsureCoreWebView2Async(environment);
             ConfigureBrowser(Browser.CoreWebView2);
-            Browser.CoreWebView2.Navigate(AppUrl);
+            Browser.CoreWebView2.Navigate(AppUrl + "?desktop=1&oauth_port=" + _oauthPort);
         }
         catch (Exception ex)
         {
@@ -68,6 +78,7 @@ public partial class MainWindow : Window
         web.Settings.AreBrowserAcceleratorKeysEnabled = true;
         web.AddWebResourceRequestedFilter("https://sellerbooks-operator.github.io/*", CoreWebView2WebResourceContext.All);
         web.WebResourceRequested += Web_WebResourceRequested;
+        web.NavigationStarting += Web_NavigationStarting;
         web.NavigationCompleted += Web_NavigationCompleted;
         web.NewWindowRequested += Web_NewWindowRequested;
         web.DownloadStarting += Web_DownloadStarting;
@@ -76,6 +87,39 @@ public partial class MainWindow : Window
 
     private void Web_WebResourceRequested(object? sender, CoreWebView2WebResourceRequestedEventArgs e)
         => e.Request.Headers.SetHeader("Cache-Control", "no-cache");
+
+    private void Web_NavigationStarting(object? sender, CoreWebView2NavigationStartingEventArgs e)
+    {
+        /*
+         * Google OAuth tidak boleh dijalankan di embedded user-agent.
+         * Jika Supabase mengarahkan WebView ke endpoint OAuth, buka URL
+         * tersebut di browser Windows asli. Callback akan kembali ke
+         * loopback listener milik aplikasi dan diteruskan ke WebView.
+         */
+        if (!string.IsNullOrWhiteSpace(e.Uri) &&
+            e.Uri.Contains("/auth/v1/authorize", StringComparison.OrdinalIgnoreCase) &&
+            e.Uri.StartsWith("https://fysaxpqpqexjnlpkbwap.supabase.co/", StringComparison.OrdinalIgnoreCase))
+        {
+            try
+            {
+                Process.Start(new ProcessStartInfo
+                {
+                    FileName = e.Uri,
+                    UseShellExecute = true
+                });
+                e.Cancel = true;
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(this,
+                    "Browser Google tidak dapat dibuka.\\n\\n" + ex.Message,
+                    "SellerBooks Operator",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Warning);
+                e.Cancel = true;
+            }
+        }
+    }
 
     private void Web_NavigationCompleted(object? sender, CoreWebView2NavigationCompletedEventArgs e)
     {
@@ -164,5 +208,112 @@ public partial class MainWindow : Window
         TryNavigate();
     }
 
-    private void MainWindow_Closing(object? sender, CancelEventArgs e) => _networkTimer.Stop();
+    private int StartOAuthListener()
+    {
+        _oauthCts = new CancellationTokenSource();
+        _oauthListener = new TcpListener(IPAddress.Loopback, 0);
+        _oauthListener.Start();
+        var port = ((IPEndPoint)_oauthListener.LocalEndpoint).Port;
+        _ = Task.Run(() => OAuthListenerLoopAsync(_oauthCts.Token));
+        return port;
+    }
+
+    private async Task OAuthListenerLoopAsync(CancellationToken token)
+    {
+        if (_oauthListener is null) return;
+
+        try
+        {
+            while (!token.IsCancellationRequested)
+            {
+                var client = await _oauthListener.AcceptTcpClientAsync(token);
+                _ = Task.Run(() => HandleOAuthClientAsync(client), token);
+            }
+        }
+        catch (OperationCanceledException) { }
+        catch (ObjectDisposedException) { }
+        catch (Exception ex)
+        {
+            Dispatcher.Invoke(() =>
+                MessageBox.Show(this,
+                    "OAuth callback listener gagal.\\n\\n" + ex.Message,
+                    "SellerBooks Operator",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Warning));
+        }
+    }
+
+    private async Task HandleOAuthClientAsync(TcpClient client)
+    {
+        using (client)
+        using (var stream = client.GetStream())
+        {
+            var buffer = new byte[8192];
+            var read = await stream.ReadAsync(buffer, 0, buffer.Length);
+            var request = Encoding.UTF8.GetString(buffer, 0, read);
+
+            var firstLine = request.Split(new[] { "\\r\\n" }, StringSplitOptions.None).FirstOrDefault() ?? "";
+            var parts = firstLine.Split(' ');
+            var target = parts.Length >= 2 ? parts[1] : "/";
+            var uri = new Uri("http://127.0.0.1" + target);
+
+            var query = ParseQuery(uri.Query);
+            var code = query.TryGetValue("code", out var c) ? c : null;
+            var error = query.TryGetValue("error", out var err) ? err : null;
+            var description = query.TryGetValue("error_description", out var desc) ? desc : null;
+
+            const string html = "<!doctype html><html><head><meta charset='utf-8'><title>SellerBooks Operator</title></head><body style='font-family:Arial;text-align:center;padding:60px'><h2>Login SellerBooks selesai.</h2><p>Silakan kembali ke jendela SellerBooks Operator.</p><script>window.close();</script></body></html>";
+            var body = Encoding.UTF8.GetBytes(html);
+            var response = Encoding.ASCII.GetBytes(
+                "HTTP/1.1 200 OK\\r\\n" +
+                "Content-Type: text/html; charset=utf-8\\r\\n" +
+                "Content-Length: " + body.Length + "\\r\\n" +
+                "Connection: close\\r\\n\\r\\n");
+            await stream.WriteAsync(response, 0, response.Length);
+            await stream.WriteAsync(body, 0, body.Length);
+
+            Dispatcher.Invoke(() =>
+            {
+                if (!string.IsNullOrWhiteSpace(error))
+                {
+                    MessageBox.Show(this,
+                        "Login Google gagal.\\n\\n" + (description ?? error),
+                        "SellerBooks Operator",
+                        MessageBoxButton.OK,
+                        MessageBoxImage.Warning);
+                    return;
+                }
+
+                if (!string.IsNullOrWhiteSpace(code))
+                {
+                    Browser.CoreWebView2?.Navigate(
+                        AppUrl + "?desktop=1&oauth_port=" + _oauthPort +
+                        "&code=" + Uri.EscapeDataString(code));
+                }
+            });
+        }
+    }
+
+    private static Dictionary<string,string> ParseQuery(string query)
+    {
+        var result = new Dictionary<string,string>(StringComparer.OrdinalIgnoreCase);
+        var raw = query.StartsWith("?") ? query[1..] : query;
+        foreach (var item in raw.Split('&', StringSplitOptions.RemoveEmptyEntries))
+        {
+            var pair = item.Split('=', 2);
+            var key = Uri.UnescapeDataString(pair[0].Replace("+", " "));
+            var value = pair.Length > 1
+                ? Uri.UnescapeDataString(pair[1].Replace("+", " "))
+                : "";
+            result[key] = value;
+        }
+        return result;
+    }
+
+    private void MainWindow_Closing(object? sender, CancelEventArgs e)
+    {
+        _networkTimer.Stop();
+        try { _oauthCts?.Cancel(); } catch { }
+        try { _oauthListener?.Stop(); } catch { }
+    }
 }
