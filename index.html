@@ -4083,7 +4083,15 @@ async function sellerBooksEnsureSupabase(){
 
   sellerBooksSupabase=window.supabase.createClient(
     SELLERBOOKS_SUPABASE_URL,
-    SELLERBOOKS_SUPABASE_KEY
+    SELLERBOOKS_SUPABASE_KEY,
+    {
+      auth:{
+        flowType:"pkce",
+        persistSession:true,
+        autoRefreshToken:true,
+        detectSessionInUrl:true
+      }
+    }
   );
 
   if(!sellerBooksAuthListenerBound){
@@ -4280,10 +4288,15 @@ async function loginGoogle(){
   try{
     await sellerBooksEnsureSupabase();
 
+    const params=new URLSearchParams(location.search);
+    const desktopOAuth=params.get("desktop")==="1";
+    const oauthPort=params.get("oauth_port");
     const redirectTo =
-      location.protocol === "http:" || location.protocol === "https:"
-        ? location.origin + location.pathname
-        : null;
+      desktopOAuth && oauthPort
+        ? ("http://127.0.0.1:"+oauthPort+"/oauth-callback")
+        : (location.protocol === "http:" || location.protocol === "https:"
+            ? location.origin + location.pathname
+            : null);
 
     const options = {
       queryParams:{prompt:"select_account"}
@@ -4533,6 +4546,26 @@ async function operatorInit(){
     console.error("SellerBooks Operator Supabase init:",e);
     operatorShowLogin();
     return;
+  }
+
+  const oauthCode=new URLSearchParams(location.search).get("code");
+  if(oauthCode){
+    /*
+      Desktop Windows Operator: MainWindow menerima callback OAuth
+      di loopback lalu mengarahkan WebView kembali ke halaman ini.
+      Supabase PKCE otomatis menukar code menggunakan verifier
+      yang sebelumnya dibuat di WebView yang sama.
+    */
+    try{
+      const {error:exchangeError}=await sellerBooksSupabase.auth.exchangeCodeForSession(oauthCode);
+      if(exchangeError)throw exchangeError;
+      const cleanUrl=location.origin+location.pathname+"?desktop=1";
+      history.replaceState({},document.title,cleanUrl);
+    }catch(e){
+      console.error("OAuth callback exchange gagal:",e);
+      alert("Login Google gagal.\\n\\n"+(e.message||"Kode login tidak dapat diproses."));
+      return;
+    }
   }
 
   const {data,error}=await sellerBooksSupabase.auth.getSession();
