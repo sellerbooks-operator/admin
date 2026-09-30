@@ -4989,9 +4989,8 @@ function getSalesAmountOperator(row,data){
 
 async function commitOperatorImport(){
  try{
-   const currentOwnerName=String(sellerBooksOperatorWorkspace?.owner_name||"").trim();
-   if(!currentOwnerName)throw new Error("OWNER_NAME_NOT_FOUND");
-   await operatorLoadWorkspace(currentOwnerName);
+   /* Refresh melalui workspace RPC yang terikat ke identitas Operator/Owner. */
+   await operatorRestoreSavedWorkspace();
  }catch(refreshError){
    console.error("Gagal refresh Master Produk Operator:",refreshError);
    alert("Master Produk terbaru belum dapat diambil.\n\nImport dibatalkan agar perhitungan tidak menggunakan data Master Produk lama.");
