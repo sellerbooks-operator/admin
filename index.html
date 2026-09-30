@@ -4968,16 +4968,47 @@ function saveSalesImportData(){
  return payload;
 }
 function getSalesAmountOperator(row,data){
- const skuIndex=data.skuIndex!=null?data.skuIndex:data.headers.indexOf(data.skuColumn),qtyIndex=data.qtyIndex!=null?data.qtyIndex:data.headers.indexOf(data.qtyColumn),sku=skuIndex>=0?String(row[skuIndex]||"").trim():"",qty=data.marketplace==="Lazada"?1:(data.marketplace==="Shopee"&&data.qtyColumn==="__SHOPEE_QTY_PER_ROW__"?1:(qtyIndex>=0?parseSalesNumber(row[qtyIndex]):0));
+ const skuIndex=data.skuIndex!=null?data.skuIndex:data.headers.indexOf(data.skuColumn);
+ const qtyIndex=data.qtyIndex!=null?data.qtyIndex:data.headers.indexOf(data.qtyColumn);
+ const sku=skuIndex>=0?String(row[skuIndex]||"").trim():"";
+ const qty=data.marketplace==="Lazada"||(data.marketplace==="Shopee"&&data.qtyColumn==="__SHOPEE_QTY_PER_ROW__")?1:(qtyIndex>=0?parseSalesNumber(row[qtyIndex]):0);
+
  if(data.marketplace==="Lazada")return parseLazadaUnitPrice(row[47])*qty;
  if(data.marketplace==="TikTok")return parseSalesNumber(row[15]);
- if(data.marketplace==="Shopee"){const rule=SALES_MARKETPLACE_RULES[data.marketplace];const subtotal=parseSalesNumber(getFirstValue(row,data.headers,rule.priceAliases));if(subtotal>0)return subtotal;const product=getMasterProductBySku(sku);return product?(Number(product.price)||0)*qty:0;}
+
+ if(data.marketplace==="Shopee"){
+   const rule=SALES_MARKETPLACE_RULES[data.marketplace];
+   const marketplacePrice=getFirstValue(row,data.headers,rule&&rule.priceAliases?rule.priceAliases:[]);
+   const subtotal=parseSalesNumber(marketplacePrice);
+   if(subtotal>0)return subtotal;
+
+   const product=getMasterProductBySku(sku);
+   const masterPrice=product?(Number(product.price)||0):0;
+   return masterPrice*qty;
+ }
+
  if(data.marketplace==="Blibli")return parseSalesNumber(row[8])*qty;
- const product=getMasterProductBySku(sku);return product?(Number(product.price)||0)*qty:0;
+
+ const product=getMasterProductBySku(sku);
+ return product?(Number(product.price)||0)*qty;
 }
 
 async function commitOperatorImport(){
- const payload=saveSalesImportData(); if(!payload)return;
+
+ /* Refresh Master Produk terbaru sebelum menghitung import.
+    Admin tetap menjadi sumber rumus; Operator hanya menyegarkan data Master. */
+ try{
+   const currentOwnerName=String(sellerBooksOperatorWorkspace?.owner_name||"").trim();
+   if(!currentOwnerName)throw new Error("OWNER_NAME_NOT_FOUND");
+   await operatorLoadWorkspace(currentOwnerName);
+ }catch(refreshError){
+   console.error("Gagal refresh Master Produk Operator:",refreshError);
+   alert("Master Produk terbaru belum dapat diambil.\n\nImport dibatalkan agar perhitungan tidak menggunakan data Master Produk lama.");
+   return;
+ }
+
+ const payload=saveSalesImportData();
+ if(!payload)return;
  if(!payload.transactions.length){alert("Tidak ada transaksi yang dapat diimport.");return;}
  const btn=document.getElementById("confirmSalesColumnsButton"); if(btn)btn.disabled=true;
  try{
