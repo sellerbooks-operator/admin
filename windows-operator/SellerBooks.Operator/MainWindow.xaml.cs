@@ -76,9 +76,14 @@ public partial class MainWindow : Window
         web.Settings.AreDevToolsEnabled = false;
         web.Settings.IsStatusBarEnabled = false;
         web.Settings.AreBrowserAcceleratorKeysEnabled = true;
+
+        // Tandai WebView sebagai aplikasi Windows SellerBooks Operator.
+        // index.html memakai marker ini agar OAuth Google tetap berada
+        // di WebView yang sama, seperti mekanisme SellerBooks Admin.
+        web.Settings.UserAgent = web.Settings.UserAgent + " SellerBooksOperator/1.0";
+
         web.AddWebResourceRequestedFilter("https://sellerbooks-operator.github.io/*", CoreWebView2WebResourceContext.All);
         web.WebResourceRequested += Web_WebResourceRequested;
-        web.NavigationStarting += Web_NavigationStarting;
         web.NavigationCompleted += Web_NavigationCompleted;
         web.NewWindowRequested += Web_NewWindowRequested;
         web.DownloadStarting += Web_DownloadStarting;
@@ -87,39 +92,6 @@ public partial class MainWindow : Window
 
     private void Web_WebResourceRequested(object? sender, CoreWebView2WebResourceRequestedEventArgs e)
         => e.Request.Headers.SetHeader("Cache-Control", "no-cache");
-
-    private void Web_NavigationStarting(object? sender, CoreWebView2NavigationStartingEventArgs e)
-    {
-        /*
-         * Google OAuth tidak boleh dijalankan di embedded user-agent.
-         * Jika Supabase mengarahkan WebView ke endpoint OAuth, buka URL
-         * tersebut di browser Windows asli. Callback akan kembali ke
-         * loopback listener milik aplikasi dan diteruskan ke WebView.
-         */
-        if (!string.IsNullOrWhiteSpace(e.Uri) &&
-            e.Uri.Contains("/auth/v1/authorize", StringComparison.OrdinalIgnoreCase) &&
-            e.Uri.StartsWith("https://fysaxpqpqexjnlpkbwap.supabase.co/", StringComparison.OrdinalIgnoreCase))
-        {
-            try
-            {
-                Process.Start(new ProcessStartInfo
-                {
-                    FileName = e.Uri,
-                    UseShellExecute = true
-                });
-                e.Cancel = true;
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show(this,
-                    "Browser Google tidak dapat dibuka.\\n\\n" + ex.Message,
-                    "SellerBooks Operator",
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Warning);
-                e.Cancel = true;
-            }
-        }
-    }
 
     private void Web_NavigationCompleted(object? sender, CoreWebView2NavigationCompletedEventArgs e)
     {
