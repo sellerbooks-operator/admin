@@ -4284,7 +4284,7 @@ function operatorShowLogin(){
   s3.style.display="none";
   const em=document.getElementById("operatorApprovalEmail"); if(em) em.textContent=sellerBooksAuthUser.email||"";
 }
-async async function loginGoogle(){
+async function loginGoogle(){
   try{
     await sellerBooksEnsureSupabase();
 
