@@ -22,12 +22,13 @@ UninstallDisplayIcon={app}\SellerBooks Operator.exe
 
 [Files]
 Source: "..\publish-operator\*"; DestDir: "{app}"; Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "SellerBooks Operator.ico"; DestDir: "{app}"; Flags: ignoreversion
 Source: "..\MicrosoftEdgeWebView2Setup.exe"; DestDir: "{tmp}"; Flags: deleteafterinstall
 Source: "..\vc_redist.x64.exe"; DestDir: "{tmp}"; Flags: deleteafterinstall
 
 [Icons]
-Name: "{autoprograms}\SellerBooks Operator"; Filename: "{app}\SellerBooks Operator.exe"
-Name: "{autodesktop}\SellerBooks Operator"; Filename: "{app}\SellerBooks Operator.exe"; Tasks: desktopicon
+Name: "{autoprograms}\SellerBooks Operator"; Filename: "{app}\SellerBooks Operator.exe"; IconFilename: "{app}\SellerBooks Operator.ico"; IconIndex: 0; AppUserModelID: "SellerBooks.SellerBooksOperator"
+Name: "{autodesktop}\SellerBooks Operator"; Filename: "{app}\SellerBooks Operator.exe"; IconFilename: "{app}\SellerBooks Operator.ico"; IconIndex: 0; AppUserModelID: "SellerBooks.SellerBooksOperator"; Tasks: desktopicon
 
 [Tasks]
 Name: "desktopicon"; Description: "Buat shortcut di Desktop"; GroupDescription: "Shortcut:"
