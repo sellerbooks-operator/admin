@@ -4576,20 +4576,31 @@ async function operatorInit(){
   const oauthCode=new URLSearchParams(location.search).get("code");
   if(oauthCode){
     /*
-      Desktop Windows Operator: MainWindow menerima callback OAuth
-      di loopback lalu mengarahkan WebView kembali ke halaman ini.
-      Supabase PKCE otomatis menukar code menggunakan verifier
-      yang sebelumnya dibuat di WebView yang sama.
+      Jika Supabase sudah menyelesaikan callback PKCE otomatis, session
+      sudah tersedia. Jangan exchange code yang sama untuk kedua kalinya.
+      Authorization code bersifat single-use, sehingga exchange kedua dapat
+      menghasilkan error "PKCE code verifier not found" walaupun login sudah
+      berhasil.
     */
     try{
-      const {error:exchangeError}=await sellerBooksSupabase.auth.exchangeCodeForSession(oauthCode);
-      if(exchangeError)throw exchangeError;
+      const {data:existingSession}=await sellerBooksSupabase.auth.getSession();
+
+      if(!existingSession?.session){
+        const {error:exchangeError}=await sellerBooksSupabase.auth.exchangeCodeForSession(oauthCode);
+        if(exchangeError)throw exchangeError;
+      }
+
       const cleanUrl=location.origin+location.pathname+"?desktop=1";
       history.replaceState({},document.title,cleanUrl);
     }catch(e){
+      /*
+        Jangan tampilkan popup di callback. Validasi session di bawah akan
+        menentukan apakah login benar-benar berhasil. Ini mencegah popup
+        PKCE palsu ketika session sudah dibuat oleh Supabase.
+      */
       console.error("OAuth callback exchange gagal:",e);
-      alert("Login Google gagal.\\n\\n"+(e.message||"Kode login tidak dapat diproses."));
-      return;
+      const cleanUrl=location.origin+location.pathname+"?desktop=1";
+      history.replaceState({},document.title,cleanUrl);
     }
   }
 
