@@ -4284,43 +4284,68 @@ function operatorShowLogin(){
   s3.style.display="none";
   const em=document.getElementById("operatorApprovalEmail"); if(em) em.textContent=sellerBooksAuthUser.email||"";
 }
-async function loginGoogle(){
+async async function loginGoogle(){
   try{
     await sellerBooksEnsureSupabase();
 
-    const params=new URLSearchParams(location.search);
-    const desktopOAuth=params.get("desktop")==="1";
-    const oauthPort=params.get("oauth_port");
-    const redirectTo =
-      desktopOAuth && oauthPort
-        ? ("http://127.0.0.1:"+oauthPort+"/oauth-callback")
-        : (location.protocol === "http:" || location.protocol === "https:"
-            ? location.origin + location.pathname
-            : null);
+    /*
+       WINDOWS SELLERBOOKS OPERATOR:
+       Login Google harus tetap berlangsung di WebView yang sama.
+       Jangan biarkan Supabase menyerahkan navigasi OAuth ke browser
+       eksternal, karena PKCE verifier tersimpan pada storage WebView.
+    */
+    const isSellerBooksWindowsApp =
+      /SellerBooksOperator\/1\.0/i.test(
+        navigator.userAgent.replace(/\s+/g,"")
+      );
 
-    const options = {
-      queryParams:{prompt:"select_account"}
-    };
+    if(isSellerBooksWindowsApp){
+      const {data,error}=await sellerBooksSupabase.auth.signInWithOAuth({
+        provider:"google",
+        options:{
+          redirectTo:"https://sellerbooks-operator.github.io/admin/",
+          skipBrowserRedirect:true,
+          queryParams:{
+            prompt:"select_account"
+          }
+        }
+      });
 
-    if(redirectTo){
-      options.redirectTo = redirectTo;
+      if(error){
+        console.error("Google Login gagal:",error);
+        alert(
+          "Login Google gagal.\n\n" +
+          String(error?.message || error)
+        );
+        return;
+      }
+
+      if(data && data.url){
+        window.location.assign(data.url);
+      }
+
+      return;
     }
 
     const {data,error} =
       await sellerBooksSupabase.auth.signInWithOAuth({
         provider:"google",
-        options:options
+        options:{
+          redirectTo:
+            location.protocol === "http:" ||
+            location.protocol === "https:"
+              ? location.origin + location.pathname
+              : null,
+          queryParams:{
+            prompt:"select_account"
+          }
+        }
       });
 
     if(error){
       throw error;
     }
 
-    /*
-       Fallback untuk WebView/PWA:
-       jika Supabase mengembalikan URL OAuth tetapi browser/WebView
-       tidak melakukan navigasi otomatis, arahkan secara eksplisit.
-    */
     if(data && data.url){
       window.location.assign(data.url);
     }
