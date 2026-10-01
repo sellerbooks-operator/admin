@@ -9,12 +9,17 @@ using System.Diagnostics;
 using System.Text;
 using System.Windows;
 using System.Windows.Threading;
+using System.Runtime.InteropServices;
 
 namespace SellerBooks.Operator;
 
 public partial class MainWindow : Window
 {
     private const string AppUrl = "https://sellerbooks-operator.github.io/admin/";
+    private const string AppUserModelId = "SellerBooks.SellerBooksOperator";
+
+    [DllImport("shell32.dll", CharSet = CharSet.Unicode)]
+    private static extern int SetCurrentProcessExplicitAppUserModelID(string appID);
     private readonly string _userDataFolder;
     private readonly DispatcherTimer _networkTimer;
     private bool _offline;
@@ -26,6 +31,10 @@ public partial class MainWindow : Window
 
     public MainWindow()
     {
+        // Samakan identitas taskbar dengan shortcut installer agar
+        // taskbar menggunakan ikon SB biru yang sama.
+        try { SetCurrentProcessExplicitAppUserModelID(AppUserModelId); } catch { }
+
         InitializeComponent();
         _userDataFolder = Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
