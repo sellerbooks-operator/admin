@@ -4103,9 +4103,22 @@ async function sellerBooksEnsureSupabase(){
     sellerBooksSupabase.auth.onAuthStateChange((event,session)=>{
       if(session?.user){
         sellerBooksAuthUser=session.user;
-        sellerBooksOperatorEnsureLanguageAfterAuth()
-          .catch(function(error){console.warn("Operator language auth sync failed:",error);})
-          .finally(function(){operatorShowLogin();setTimeout(()=>checkOperatorApproval(),0);});
+        /*
+          Jangan melakukan operasi Supabase async langsung di dalam
+          onAuthStateChange. Tunda ke macrotask berikutnya agar lock Auth
+          selesai terlebih dahulu.
+        */
+        operatorShowLogin();
+        setTimeout(function(){
+          sellerBooksOperatorEnsureLanguageAfterAuth()
+            .catch(function(error){
+              console.warn("Operator language auth sync failed:",error);
+            })
+            .finally(function(){
+              sellerBooksOperatorApplyLanguage();
+              checkOperatorApproval();
+            });
+        },0);
       }else{
         sellerBooksStopOperatorIdentityGuard();
         sellerBooksAuthUser=null;
