@@ -4,6 +4,10 @@
 #loginPage{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;background:radial-gradient(circle at top left,#dbeafe,transparent 35%),radial-gradient(circle at bottom right,#e0e7ff,transparent 35%),#f8fafc}
 .login-card{width:100%;max-width:520px;background:#fff;border-radius:24px;padding:40px;box-shadow:0 25px 70px rgba(15,23,42,.12);border:1px solid var(--border)}
 .login-brand{display:flex;align-items:center;gap:12px;margin-bottom:28px}.logo{width:48px;height:48px;border-radius:14px;background:var(--primary);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:20px}.login-card h1{font-size:28px;margin-bottom:8px}.login-card p{color:var(--muted);line-height:1.6;font-size:14px}.google-button{width:100%;height:54px;margin-top:25px;border:1px solid var(--border);background:#fff;border-radius:12px;cursor:pointer;font-size:15px;font-weight:700}.login-note{margin-top:18px;padding:14px;background:#f8fafc;border-radius:12px;font-size:12px;color:var(--muted);line-height:1.5}
+.operator-language-control{display:flex;align-items:center;justify-content:flex-end;gap:8px;margin:-12px 0 22px}
+.operator-language-control label{font-size:12px;font-weight:700;color:#64748b}
+.operator-language-control select{height:36px;border:1px solid #dbe2ea;border-radius:9px;background:#fff;color:#0f172a;padding:0 30px 0 10px;font-size:12px;font-weight:700;cursor:pointer;outline:none}
+.operator-language-control select:focus{border-color:#2563eb;box-shadow:0 0 0 3px rgba(37,99,235,.1)}
 #app{display:none;min-height:100vh}.operator-topbar{height:72px;background:#fff;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 28px;position:sticky;top:0;z-index:20}.operator-brand{display:flex;align-items:center;gap:10px;font-weight:800}.operator-brand .logo{width:40px;height:40px;font-size:16px}.operator-user{font-size:12px;color:var(--muted);display:flex;align-items:center;gap:12px}.logout{border:0;background:#f1f5f9;border-radius:9px;padding:9px 12px;cursor:pointer}.app-content{max-width:1250px;margin:auto;padding:30px 22px}.page-header{margin-bottom:22px}.page-header h2{font-size:25px;margin-bottom:7px}.page-header p{color:var(--muted);font-size:13px}.operator-banner{background:#eff6ff;border:1px solid #bfdbfe;border-radius:16px;padding:15px 18px;margin-bottom:20px;color:#1e40af;font-size:13px;line-height:1.5}.result-card{display:none;background:#fff;border:1px solid var(--border);border-radius:18px;padding:20px;margin-top:20px}.result-card.show{display:block}.result-card h3{margin-bottom:8px}.result-ok{color:#166534}.result-error{color:#991b1b}.result-meta{font-size:12px;color:var(--muted);line-height:1.7}
 /* =====================================================
    IMPORT PENJUALAN
@@ -1040,7 +1044,7 @@
     box-sizing:border-box;
 }
 </style>
-</head><body><div id="sellerBooksDialogOverlay" aria-hidden="true"><div class="sellerbooks-dialog" role="dialog" aria-modal="true" aria-labelledby="sellerBooksDialogTitle"><div class="sellerbooks-dialog-header"><div class="sellerbooks-dialog-icon" id="sellerBooksDialogIcon">✓</div><div class="sellerbooks-dialog-title" id="sellerBooksDialogTitle">SellerBooks</div></div><div class="sellerbooks-dialog-body" id="sellerBooksDialogMessage"></div><div class="sellerbooks-dialog-footer"><button type="button" class="sellerbooks-dialog-button sellerbooks-dialog-ok" id="sellerBooksDialogOk">OK</button></div></div></div><section id="loginPage"><div class="login-card"><div class="login-brand"><div class="logo">SB</div><div><strong>SellerBooks</strong><div style="font-size:11px;color:#64748b;margin-top:3px">IMPORT PENJUALAN</div></div></div><div id="loginStep1"><h1>Login Operator</h1><p>Masuk menggunakan Gmail Operator untuk mengajukan akses ke SellerBooks.</p><button class="google-button" type="button" onclick="loginGoogle()">🔐 Masuk dengan Google</button><div class="login-note">Gunakan Gmail Operator yang berbeda dari Gmail Owner. Setelah login, permintaan akses akan menunggu persetujuan Core Adiimasa.</div></div><div id="loginStep2" style="display:none"><div style="font-size:42px;text-align:center;margin-bottom:10px">⏳</div><h1 style="text-align:center">Menunggu Persetujuan</h1><p style="text-align:center">Akun Gmail Operator Anda sudah login, tetapi belum mendapat persetujuan dari <strong>Core Adiimasa</strong>.</p><div id="operatorApprovalEmail" class="login-note" style="text-align:center;font-weight:700"></div><button class="google-button" type="button" onclick="checkOperatorApproval()">🔄 Cek Persetujuan</button><button type="button" onclick="sellerBooksLogout()" style="width:100%;height:44px;margin-top:10px;border:0;background:#f1f5f9;border-radius:10px;cursor:pointer">Keluar</button><div id="operatorApprovalMessage" class="login-note">Silakan tunggu sampai Core Adiimasa menyetujui akun Operator ini.</div></div><div id="loginStep3" style="display:none"><div style="font-size:42px;text-align:center;margin-bottom:10px">👤</div><h1>Nama Pemilik</h1><p>Persetujuan Operator sudah aktif. Sekarang masukkan <strong>Nama Pemilik</strong> yang sesuai dengan data Owner SellerBooks.</p><label style="display:block;font-size:13px;font-weight:700;margin-top:22px;margin-bottom:8px">Nama Pemilik</label><input id="ownerNameLogin" type="text" autocomplete="organization" placeholder="Contoh: Adiimasa store" style="width:100%;height:52px;border:1px solid #cbd5e1;border-radius:12px;padding:0 14px;font-size:15px;outline:none"><button class="google-button" type="button" onclick="resolveOwnerWorkspace()">➡️ Masuk ke Import Penjualan</button><button type="button" onclick="sellerBooksLogout()" style="width:100%;height:44px;margin-top:10px;border:0;background:#f1f5f9;border-radius:10px;cursor:pointer">Keluar</button><div id="ownerNameMessage" class="login-note">Nama Pemilik harus sesuai dengan data yang terdaftar di SellerBooks.</div></div></div></section><div id="app"><header class="operator-topbar"><div class="operator-brand"><div class="logo">SB</div><div>SellerBooks <span style="font-weight:500;color:#64748b">• Import Penjualan</span></div></div><div class="operator-user"><span id="operatorEmail"></span><button class="logout" onclick="sellerBooksLogout()">Keluar</button></div></header><main class="app-content"><div class="operator-banner">🔒 <strong>Mode Operator Import.</strong> Data yang tersedia di aplikasi ini hanya yang diperlukan untuk proses import. Dashboard, laba/rugi, HPP, margin, dan laporan tidak tersedia di aplikasi operator.</div><!-- =====================================
+</head><body><div id="sellerBooksDialogOverlay" aria-hidden="true"><div class="sellerbooks-dialog" role="dialog" aria-modal="true" aria-labelledby="sellerBooksDialogTitle"><div class="sellerbooks-dialog-header"><div class="sellerbooks-dialog-icon" id="sellerBooksDialogIcon">✓</div><div class="sellerbooks-dialog-title" id="sellerBooksDialogTitle">SellerBooks</div></div><div class="sellerbooks-dialog-body" id="sellerBooksDialogMessage"></div><div class="sellerbooks-dialog-footer"><button type="button" class="sellerbooks-dialog-button sellerbooks-dialog-ok" id="sellerBooksDialogOk">OK</button></div></div></div><section id="loginPage"><div class="login-card"><div class="login-brand"><div class="logo">SB</div><div><strong>SellerBooks</strong><div style="font-size:11px;color:#64748b;margin-top:3px" id="operatorLoginBrandSubtitle">IMPORT PENJUALAN</div></div></div><div class="operator-language-control"><label for="operatorLanguage" id="operatorLanguageLabel">Bahasa</label><select id="operatorLanguage" onchange="sellerBooksSetOperatorLanguage(this.value)" aria-label="Bahasa"><option value="id">Bahasa Indonesia</option><option value="en">English</option></select></div><div id="loginStep1"><h1>Login Operator</h1><p>Masuk menggunakan Gmail Operator untuk mengajukan akses ke SellerBooks.</p><button class="google-button" type="button" onclick="loginGoogle()">🔐 Masuk dengan Google</button><div class="login-note">Gunakan Gmail Operator yang berbeda dari Gmail Owner. Setelah login, permintaan akses akan menunggu persetujuan Core Adiimasa.</div></div><div id="loginStep2" style="display:none"><div style="font-size:42px;text-align:center;margin-bottom:10px">⏳</div><h1 style="text-align:center">Menunggu Persetujuan</h1><p style="text-align:center">Akun Gmail Operator Anda sudah login, tetapi belum mendapat persetujuan dari <strong>Core Adiimasa</strong>.</p><div id="operatorApprovalEmail" class="login-note" style="text-align:center;font-weight:700"></div><button class="google-button" type="button" onclick="checkOperatorApproval()">🔄 Cek Persetujuan</button><button type="button" onclick="sellerBooksLogout()" style="width:100%;height:44px;margin-top:10px;border:0;background:#f1f5f9;border-radius:10px;cursor:pointer">Keluar</button><div id="operatorApprovalMessage" class="login-note">Silakan tunggu sampai Core Adiimasa menyetujui akun Operator ini.</div></div><div id="loginStep3" style="display:none"><div style="font-size:42px;text-align:center;margin-bottom:10px">👤</div><h1>Nama Pemilik</h1><p>Persetujuan Operator sudah aktif. Sekarang masukkan <strong>Nama Pemilik</strong> yang sesuai dengan data Owner SellerBooks.</p><label style="display:block;font-size:13px;font-weight:700;margin-top:22px;margin-bottom:8px">Nama Pemilik</label><input id="ownerNameLogin" type="text" autocomplete="organization" placeholder="Contoh: Adiimasa store" style="width:100%;height:52px;border:1px solid #cbd5e1;border-radius:12px;padding:0 14px;font-size:15px;outline:none"><button class="google-button" type="button" onclick="resolveOwnerWorkspace()">➡️ Masuk ke Import Penjualan</button><button type="button" onclick="sellerBooksLogout()" style="width:100%;height:44px;margin-top:10px;border:0;background:#f1f5f9;border-radius:10px;cursor:pointer">Keluar</button><div id="ownerNameMessage" class="login-note">Nama Pemilik harus sesuai dengan data yang terdaftar di SellerBooks.</div></div></div></section><div id="app"><header class="operator-topbar"><div class="operator-brand"><div class="logo">SB</div><div>SellerBooks <span style="font-weight:500;color:#64748b">• Import Penjualan</span></div></div><div class="operator-user"><span id="operatorEmail"></span><button class="logout" onclick="sellerBooksLogout()">Keluar</button></div></header><main class="app-content"><div class="operator-banner">🔒 <strong>Mode Operator Import.</strong> Data yang tersedia di aplikasi ini hanya yang diperlukan untuk proses import. Dashboard, laba/rugi, HPP, margin, dan laporan tidak tersedia di aplikasi operator.</div><!-- =====================================
      IMPORT PENJUALAN
 ===================================== -->
 
@@ -5567,6 +5571,322 @@ function confirmSalesColumns(){
  if(!sku||(!qty&&!isLazada&&!isShopeeQtyPerRow)){alert(isLazada||isShopeeQtyPerRow?"Pilih kolom SKU terlebih dahulu.":"Pilih kolom SKU dan QTY terlebih dahulu.");return;}
  currentSalesImport.skuColumn=sku;currentSalesImport.qtyColumn=isLazada?"__LAZADA_QTY_BY_SELLERSKU__":(isShopeeQtyPerRow?"__SHOPEE_QTY_PER_ROW__":qty);currentSalesImport.skuIndex=currentSalesImport.headers.indexOf(sku);currentSalesImport.qtyIndex=(isLazada||isShopeeQtyPerRow)?-1:currentSalesImport.headers.indexOf(qty);updatePreviewColumns();commitOperatorImport();
 }
+
+/*
+=========================================================
+SELLERBOOKS OPERATOR LANGUAGE
+- Login dropdown adalah sumber pilihan bahasa.
+- Persistensi permanen hanya di Supabase.
+- Default: ID jika belum ada nilai di Supabase.
+- Tidak terkait Gmail/email sebagai penyimpan preferensi.
+=========================================================
+*/
+const SELLERBOOKS_OPERATOR_LANGUAGE_TABLE="sellerbooks_operator_language_settings";
+const SELLERBOOKS_OPERATOR_LANGUAGE_KEY="sellerbooks_operator_language";
+const SELLERBOOKS_OPERATOR_LANGUAGE_TOUCHED_KEY="sellerbooks_operator_language_touched";
+const SELLERBOOKS_OPERATOR_DEFAULT_LANGUAGE="id";
+let sellerBooksOperatorLanguage="id";
+let sellerBooksOperatorLanguageReady=false;
+let sellerBooksOperatorLanguageCommitted=false;
+let sellerBooksOperatorLanguageObserver=null;
+let sellerBooksOperatorOriginalAlert=null;
+
+const SELLERBOOKS_OPERATOR_TRANSLATIONS={
+  id:{
+    "SellerBooks | Import Penjualan Operator":"SellerBooks | Import Penjualan Operator",
+    "IMPORT PENJUALAN":"IMPORT PENJUALAN",
+    "Login Operator":"Login Operator",
+    "Masuk menggunakan Gmail Operator untuk mengajukan akses ke SellerBooks.":"Masuk menggunakan Gmail Operator untuk mengajukan akses ke SellerBooks.",
+    "🔐 Masuk dengan Google":"🔐 Masuk dengan Google",
+    "Gunakan Gmail Operator yang berbeda dari Gmail Owner. Setelah login, permintaan akses akan menunggu persetujuan Core Adiimasa.":"Gunakan Gmail Operator yang berbeda dari Gmail Owner. Setelah login, permintaan akses akan menunggu persetujuan Core Adiimasa.",
+    "Menunggu Persetujuan":"Menunggu Persetujuan",
+    "Akun Gmail Operator Anda sudah login, tetapi belum mendapat persetujuan dari":"Akun Gmail Operator Anda sudah login, tetapi belum mendapat persetujuan dari",
+    "🔄 Cek Persetujuan":"🔄 Cek Persetujuan",
+    "Keluar":"Keluar",
+    "Silakan tunggu sampai Core Adiimasa menyetujui akun Operator ini.":"Silakan tunggu sampai Core Adiimasa menyetujui akun Operator ini.",
+    "Nama Pemilik":"Nama Pemilik",
+    "Persetujuan Operator sudah aktif. Sekarang masukkan":"Persetujuan Operator sudah aktif. Sekarang masukkan",
+    "yang sesuai dengan data Owner SellerBooks.":"yang sesuai dengan data Owner SellerBooks.",
+    "➡️ Masuk ke Import Penjualan":"➡️ Masuk ke Import Penjualan",
+    "Nama Pemilik harus sesuai dengan data yang terdaftar di SellerBooks.":"Nama Pemilik harus sesuai dengan data yang terdaftar di SellerBooks.",
+    "• Import Penjualan":"• Import Penjualan",
+    "🔒 Mode Operator Import.":"🔒 Mode Operator Import.",
+    "Data yang tersedia di aplikasi ini hanya yang diperlukan untuk proses import. Dashboard, laba/rugi, HPP, margin, dan laporan tidak tersedia di aplikasi operator.":"Data yang tersedia di aplikasi ini hanya yang diperlukan untuk proses import. Dashboard, laba/rugi, HPP, margin, dan laporan tidak tersedia di aplikasi operator.",
+    "Import Penjualan":"Import Penjualan",
+    "Upload laporan penjualan marketplace. SellerBooks akan membaca struktur file dan mencari SKU serta QTY secara otomatis.":"Upload laporan penjualan marketplace. SellerBooks akan membaca struktur file dan mencari SKU serta QTY secara otomatis.",
+    "SellerBooks Smart File Analyzer":"SellerBooks Smart File Analyzer",
+    "Upload file dari marketplace tanpa perlu memilih marketplace terlebih dahulu. Sistem akan menganalisis struktur data secara otomatis.":"Upload file dari marketplace tanpa perlu memilih marketplace terlebih dahulu. Sistem akan menganalisis struktur data secara otomatis.",
+    "Upload Laporan Penjualan":"Upload Laporan Penjualan",
+    "Klik di sini untuk memilih file":"Klik di sini untuk memilih file",
+    "+ Pilih File":"+ Pilih File",
+    "Hasil Analisis File":"Hasil Analisis File",
+    "SellerBooks telah membaca struktur file Anda.":"SellerBooks telah membaca struktur file Anda.",
+    "Menunggu Analisis":"Menunggu Analisis",
+    "Nama File":"Nama File",
+    "Format":"Format",
+    "Jumlah Baris":"Jumlah Baris",
+    "Jumlah Kolom":"Jumlah Kolom",
+    "🏷️":"🏷️",
+    "SKU Recognition":"SKU Recognition",
+    "Belum ditemukan":"Belum ditemukan",
+    "Menunggu analisis":"Menunggu analisis",
+    "QTY Recognition":"QTY Recognition",
+    "Harga Jual Recognition":"Harga Jual Recognition",
+    "Kolom yang Ditemukan":"Kolom yang Ditemukan",
+    "✕ Batalkan":"✕ Batalkan",
+    "Lanjutkan Import →":"Lanjutkan Import →",
+    "Preview & Konfirmasi Data":"Preview & Konfirmasi Data",
+    "Pastikan SellerBooks membaca kolom SKU dan QTY dengan benar sebelum melanjutkan.":"Pastikan SellerBooks membaca kolom SKU dan QTY dengan benar sebelum melanjutkan.",
+    "File":"File",
+    "Jumlah Data":"Jumlah Data",
+    "🏷️ Pilih Kolom SKU":"🏷️ Pilih Kolom SKU",
+    "-- Pilih Kolom SKU --":"-- Pilih Kolom SKU --",
+    "Pilih kolom yang berisi SKU atau kode produk.":"Pilih kolom yang berisi SKU atau kode produk.",
+    "📦 Pilih Kolom QTY":"📦 Pilih Kolom QTY",
+    "-- Pilih Kolom QTY --":"-- Pilih Kolom QTY --",
+    "Pilih kolom yang berisi jumlah produk terjual.":"Pilih kolom yang berisi jumlah produk terjual.",
+    "🏪 Marketplace Terdeteksi":"🏪 Marketplace Terdeteksi",
+    "SellerBooks menentukan marketplace dari struktur/header file.":"SellerBooks menentukan marketplace dari struktur/header file.",
+    "👤 Pilih Akun Toko":"👤 Pilih Akun Toko",
+    "-- Pilih Akun Toko --":"-- Pilih Akun Toko --",
+    "Akun toko wajib dipilih sebelum data disimpan.":"Akun toko wajib dipilih sebelum data disimpan.",
+    "Pilih kolom SKU dan QTY untuk melanjutkan.":"Pilih kolom SKU dan QTY untuk melanjutkan.",
+    "SKU":"SKU",
+    "QTY":"QTY",
+    "Semua baris transaksi ditampilkan.":"Semua baris transaksi ditampilkan.",
+    "← Kembali":"← Kembali",
+    "✓ Konfirmasi Data":"✓ Konfirmasi Data",
+    "Hasil Sinkronisasi":"Hasil Sinkronisasi",
+    "© 2026 All Rights Reserved by PT Adiimasa Distribusi Indonesia":"© 2026 All Rights Reserved by PT Adiimasa Distribusi Indonesia"
+  },
+  en:{
+    "SellerBooks | Import Penjualan Operator":"SellerBooks | Operator Sales Import",
+    "IMPORT PENJUALAN":"SALES IMPORT",
+    "Login Operator":"Operator Login",
+    "Masuk menggunakan Gmail Operator untuk mengajukan akses ke SellerBooks.":"Sign in with the Operator Gmail to request access to SellerBooks.",
+    "🔐 Masuk dengan Google":"🔐 Sign in with Google",
+    "Gunakan Gmail Operator yang berbeda dari Gmail Owner. Setelah login, permintaan akses akan menunggu persetujuan Core Adiimasa.":"Use a different Operator Gmail from the Owner Gmail. After signing in, the access request will wait for Core Adiimasa approval.",
+    "Menunggu Persetujuan":"Waiting for Approval",
+    "Akun Gmail Operator Anda sudah login, tetapi belum mendapat persetujuan dari":"Your Operator Gmail is signed in, but has not yet been approved by",
+    "🔄 Cek Persetujuan":"🔄 Check Approval",
+    "Keluar":"Sign Out",
+    "Silakan tunggu sampai Core Adiimasa menyetujui akun Operator ini.":"Please wait for Core Adiimasa to approve this Operator account.",
+    "Nama Pemilik":"Owner Name",
+    "Persetujuan Operator sudah aktif. Sekarang masukkan":"Operator approval is active. Now enter the",
+    "yang sesuai dengan data Owner SellerBooks.":"that matches the SellerBooks Owner data.",
+    "➡️ Masuk ke Import Penjualan":"➡️ Open Sales Import",
+    "Nama Pemilik harus sesuai dengan data yang terdaftar di SellerBooks.":"The Owner Name must match the data registered in SellerBooks.",
+    "• Import Penjualan":"• Sales Import",
+    "🔒 Mode Operator Import.":"🔒 Operator Import Mode.",
+    "Data yang tersedia di aplikasi ini hanya yang diperlukan untuk proses import. Dashboard, laba/rugi, HPP, margin, dan laporan tidak tersedia di aplikasi operator.":"Only data required for the import process is available in this application. Dashboard, profit/loss, COGS, margin, and reports are not available in the Operator application.",
+    "Import Penjualan":"Sales Import",
+    "Upload laporan penjualan marketplace. SellerBooks akan membaca struktur file dan mencari SKU serta QTY secara otomatis.":"Upload a marketplace sales report. SellerBooks will read the file structure and automatically find SKU and QTY.",
+    "SellerBooks Smart File Analyzer":"SellerBooks Smart File Analyzer",
+    "Upload file dari marketplace tanpa perlu memilih marketplace terlebih dahulu. Sistem akan menganalisis struktur data secara otomatis.":"Upload a marketplace file without selecting the marketplace first. The system will analyze the data structure automatically.",
+    "Upload Laporan Penjualan":"Upload Sales Report",
+    "Klik di sini untuk memilih file":"Click here to select a file",
+    "+ Pilih File":"+ Select File",
+    "Hasil Analisis File":"File Analysis Result",
+    "SellerBooks telah membaca struktur file Anda.":"SellerBooks has read your file structure.",
+    "Menunggu Analisis":"Waiting for Analysis",
+    "Nama File":"File Name",
+    "Format":"Format",
+    "Jumlah Baris":"Rows",
+    "Jumlah Kolom":"Columns",
+    "SKU Recognition":"SKU Recognition",
+    "Belum ditemukan":"Not found",
+    "Menunggu analisis":"Waiting for analysis",
+    "QTY Recognition":"QTY Recognition",
+    "Harga Jual Recognition":"Selling Price Recognition",
+    "Kolom yang Ditemukan":"Detected Columns",
+    "✕ Batalkan":"✕ Cancel",
+    "Lanjutkan Import →":"Continue Import →",
+    "Preview & Konfirmasi Data":"Preview & Confirm Data",
+    "Pastikan SellerBooks membaca kolom SKU dan QTY dengan benar sebelum melanjutkan.":"Make sure SellerBooks reads the SKU and QTY columns correctly before continuing.",
+    "File":"File",
+    "Jumlah Data":"Data Count",
+    "🏷️ Pilih Kolom SKU":"🏷️ Select SKU Column",
+    "-- Pilih Kolom SKU --":"-- Select SKU Column --",
+    "Pilih kolom yang berisi SKU atau kode produk.":"Select the column containing the SKU or product code.",
+    "📦 Pilih Kolom QTY":"📦 Select QTY Column",
+    "-- Pilih Kolom QTY --":"-- Select QTY Column --",
+    "Pilih kolom yang berisi jumlah produk terjual.":"Select the quantity of products sold column.",
+    "🏪 Marketplace Terdeteksi":"🏪 Detected Marketplace",
+    "SellerBooks menentukan marketplace dari struktur/header file.":"SellerBooks determines the marketplace from the file structure/header.",
+    "👤 Pilih Akun Toko":"👤 Select Store Account",
+    "-- Pilih Akun Toko --":"-- Select Store Account --",
+    "Akun toko wajib dipilih sebelum data disimpan.":"A store account must be selected before the data can be saved.",
+    "Pilih kolom SKU dan QTY untuk melanjutkan.":"Select the SKU and QTY columns to continue.",
+    "Semua baris transaksi ditampilkan.":"All transaction rows are displayed.",
+    "← Kembali":"← Back",
+    "✓ Konfirmasi Data":"✓ Confirm Data",
+    "Hasil Sinkronisasi":"Sync Result",
+    "© 2026 All Rights Reserved by PT Adiimasa Distribusi Indonesia":"© 2026 All Rights Reserved by PT Adiimasa Distribusi Indonesia"
+  }
+};
+
+function sellerBooksOperatorNormalizeLanguage(value){
+  return String(value||"").toLowerCase()==="en" ? "en" : "id";
+}
+function sellerBooksOperatorCurrentLanguage(){
+  return sellerBooksOperatorNormalizeLanguage(sellerBooksOperatorLanguage||SELLERBOOKS_OPERATOR_DEFAULT_LANGUAGE);
+}
+function sellerBooksOperatorTranslateExact(value){
+  const language=sellerBooksOperatorCurrentLanguage();
+  const source=String(value??"");
+  if(!source.trim())return source;
+  return SELLERBOOKS_OPERATOR_TRANSLATIONS[language]?.[source] ?? source;
+}
+function sellerBooksOperatorTranslateMessage(value){
+  let source=String(value??"");
+  if(sellerBooksOperatorCurrentLanguage()==="id")return source;
+  const map=SELLERBOOKS_OPERATOR_TRANSLATIONS.en;
+  Object.keys(map).sort((a,b)=>b.length-a.length).forEach(function(key){
+    if(!key || key.length<3 || !source.includes(key))return;
+    source=source.split(key).join(map[key]);
+  });
+  return source;
+}
+function sellerBooksOperatorApplyLanguage(){
+  const language=sellerBooksOperatorCurrentLanguage();
+  document.documentElement.lang=language;
+  document.title=language==="en" ? "SellerBooks | Operator Sales Import" : "SellerBooks | Import Penjualan Operator";
+  const select=document.getElementById("operatorLanguage");
+  if(select && select.value!==language)select.value=language;
+  const label=document.getElementById("operatorLanguageLabel");
+  if(label)label.textContent=language==="en" ? "Language" : "Bahasa";
+  const subtitle=document.getElementById("operatorLoginBrandSubtitle");
+  if(subtitle)subtitle.textContent=language==="en" ? "SALES IMPORT" : "IMPORT PENJUALAN";
+
+  document.querySelectorAll("input[placeholder],textarea[placeholder]").forEach(function(el){
+    const value=el.getAttribute("placeholder")||"";
+    if(value==="Contoh: Adiimasa store")el.setAttribute("placeholder",language==="en" ? "Example: Adiimasa store" : value);
+  });
+
+  document.querySelectorAll("option").forEach(function(el){
+    const value=el.textContent.trim();
+    const translated=sellerBooksOperatorTranslateExact(value);
+    if(translated!==value)el.textContent=translated;
+  });
+
+  const walker=document.createTreeWalker(document.body,NodeFilter.SHOW_TEXT);
+  const nodes=[];
+  while(walker.nextNode())nodes.push(walker.currentNode);
+  nodes.forEach(function(node){
+    const original=node.nodeValue;
+    const trimmed=String(original||"").replace(/\s+/g," ").trim();
+    if(!trimmed)return;
+    const translated=sellerBooksOperatorTranslateExact(trimmed);
+    if(translated!==trimmed){
+      const lead=original.match(/^\s*/)?.[0]||"";
+      const tail=original.match(/\s*$/)?.[0]||"";
+      node.nodeValue=lead+translated+tail;
+    }
+  });
+}
+function sellerBooksOperatorStartLanguageObserver(){
+  if(sellerBooksOperatorLanguageObserver)return;
+  sellerBooksOperatorLanguageObserver=new MutationObserver(function(){
+    sellerBooksOperatorApplyLanguage();
+  });
+  sellerBooksOperatorLanguageObserver.observe(document.body,{subtree:true,childList:true,characterData:true});
+}
+async function sellerBooksOperatorLoadLanguage(){
+  await sellerBooksEnsureSupabase();
+  try{
+    const {data,error}=await sellerBooksSupabase
+      .from(SELLERBOOKS_OPERATOR_LANGUAGE_TABLE)
+      .select("language")
+      .eq("id",1)
+      .maybeSingle();
+    if(error)throw error;
+    sellerBooksOperatorLanguage=sellerBooksOperatorNormalizeLanguage(data?.language||SELLERBOOKS_OPERATOR_DEFAULT_LANGUAGE);
+    sellerBooksOperatorLanguageReady=true;
+    sellerBooksOperatorLanguageCommitted=!!data;
+  }catch(error){
+    sellerBooksOperatorLanguage=SELLERBOOKS_OPERATOR_DEFAULT_LANGUAGE;
+    sellerBooksOperatorLanguageReady=true;
+    sellerBooksOperatorLanguageCommitted=false;
+    console.warn("Operator language load failed:",error);
+  }
+  sellerBooksOperatorApplyLanguage();
+}
+async function sellerBooksOperatorSaveLanguage(value){
+  const language=sellerBooksOperatorNormalizeLanguage(value);
+  sellerBooksOperatorLanguage=language;
+  sellerBooksOperatorLanguageReady=true;
+  try{
+    localStorage.setItem(SELLERBOOKS_OPERATOR_LANGUAGE_KEY,language);
+    localStorage.setItem(SELLERBOOKS_OPERATOR_LANGUAGE_TOUCHED_KEY,"1");
+  }catch(error){}
+  sellerBooksOperatorApplyLanguage();
+
+  try{
+    await sellerBooksEnsureSupabase();
+    const {error:updateError}=await sellerBooksSupabase
+      .from(SELLERBOOKS_OPERATOR_LANGUAGE_TABLE)
+      .update({language:language,updated_at:new Date().toISOString()})
+      .eq("id",1);
+    if(updateError)throw updateError;
+
+    const {data:verifyData,error:verifyError}=await sellerBooksSupabase
+      .from(SELLERBOOKS_OPERATOR_LANGUAGE_TABLE)
+      .select("language")
+      .eq("id",1)
+      .maybeSingle();
+    if(verifyError)throw verifyError;
+    if(!verifyData || sellerBooksOperatorNormalizeLanguage(verifyData.language)!==language){
+      throw new Error("Operator language persistence verification failed.");
+    }
+    sellerBooksOperatorLanguageCommitted=true;
+    localStorage.removeItem(SELLERBOOKS_OPERATOR_LANGUAGE_KEY);
+    localStorage.removeItem(SELLERBOOKS_OPERATOR_LANGUAGE_TOUCHED_KEY);
+  }catch(error){
+    sellerBooksOperatorLanguageCommitted=false;
+    console.warn("Operator language save failed:",error);
+  }
+}
+async function sellerBooksOperatorEnsureLanguageAfterAuth(){
+  await sellerBooksEnsureSupabase();
+  let touched=false;
+  try{touched=localStorage.getItem(SELLERBOOKS_OPERATOR_LANGUAGE_TOUCHED_KEY)==="1";}catch(error){}
+  if(touched){
+    let selected=SELLERBOOKS_OPERATOR_DEFAULT_LANGUAGE;
+    try{selected=sellerBooksOperatorNormalizeLanguage(localStorage.getItem(SELLERBOOKS_OPERATOR_LANGUAGE_KEY));}catch(error){}
+    await sellerBooksOperatorSaveLanguage(selected);
+    return;
+  }
+  await sellerBooksOperatorLoadLanguage();
+}
+function sellerBooksSetOperatorLanguage(value){
+  sellerBooksOperatorSaveLanguage(value).catch(function(error){
+    console.warn("Operator language selection failed:",error);
+  });
+}
+
+/* Translate the existing custom dialog/alerts without changing their logic. */
+function sellerBooksOperatorInstallAlertTranslation(){
+  if(sellerBooksOperatorOriginalAlert)return;
+  sellerBooksOperatorOriginalAlert=window.sellerBooksAlert;
+  if(typeof sellerBooksOperatorOriginalAlert!=="function")return;
+  window.sellerBooksAlert=function(message,title){
+    return sellerBooksOperatorOriginalAlert(
+      sellerBooksOperatorTranslateMessage(message),
+      sellerBooksOperatorTranslateMessage(title||"SellerBooks")
+    );
+  };
+  window.alert=window.sellerBooksAlert;
+}
+
+window.addEventListener("load",async function(){
+  try{
+    await sellerBooksOperatorLoadLanguage();
+    sellerBooksOperatorStartLanguageObserver();
+    sellerBooksOperatorInstallAlertTranslation();
+  }catch(error){
+    console.warn("Operator language initialization failed:",error);
+  }
+});
 
 window.addEventListener("load",operatorInit);
 </script></body></html>
