@@ -4110,14 +4110,20 @@ async function sellerBooksEnsureSupabase(){
         */
         operatorShowLogin();
         setTimeout(function(){
+          /*
+            Bahasa dan approval berjalan terpisah.
+            Sinkronisasi bahasa tidak boleh menjadi syarat untuk
+            melanjutkan pemeriksaan approval/login.
+          */
           sellerBooksOperatorEnsureLanguageAfterAuth()
             .catch(function(error){
               console.warn("Operator language auth sync failed:",error);
             })
             .finally(function(){
               sellerBooksOperatorApplyLanguage();
-              checkOperatorApproval();
             });
+
+          checkOperatorApproval();
         },0);
       }else{
         sellerBooksStopOperatorIdentityGuard();
