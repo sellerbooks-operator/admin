@@ -5596,6 +5596,10 @@ let sellerBooksOperatorLanguage="id";
 let sellerBooksOperatorLanguageReady=false;
 let sellerBooksOperatorLanguageCommitted=false;
 let sellerBooksOperatorLanguageObserver=null;
+let sellerBooksOperatorApplyingLanguage=false;
+const sellerBooksOperatorOriginalTextNodes=new WeakMap();
+const sellerBooksOperatorOriginalOptions=new WeakMap();
+const sellerBooksOperatorOriginalPlaceholders=new WeakMap();
 let sellerBooksOperatorOriginalAlert=null;
 
 const SELLERBOOKS_OPERATOR_TRANSLATIONS={
@@ -5755,48 +5759,81 @@ function sellerBooksOperatorTranslateMessage(value){
   return source;
 }
 function sellerBooksOperatorApplyLanguage(){
-  const language=sellerBooksOperatorCurrentLanguage();
-  document.documentElement.lang=language;
-  document.title=language==="en" ? "SellerBooks | Operator Sales Import" : "SellerBooks | Import Penjualan Operator";
-  const select=document.getElementById("operatorLanguage");
-  if(select && select.value!==language)select.value=language;
-  const label=document.getElementById("operatorLanguageLabel");
-  if(label)label.textContent=language==="en" ? "Language" : "Bahasa";
-  const subtitle=document.getElementById("operatorLoginBrandSubtitle");
-  if(subtitle)subtitle.textContent=language==="en" ? "SALES IMPORT" : "IMPORT PENJUALAN";
+  if(sellerBooksOperatorApplyingLanguage)return;
+  sellerBooksOperatorApplyingLanguage=true;
+  try{
+    const language=sellerBooksOperatorCurrentLanguage();
+    document.documentElement.lang=language;
+    document.title=language==="en" ? "SellerBooks | Operator Sales Import" : "SellerBooks | Import Penjualan Operator";
 
-  document.querySelectorAll("input[placeholder],textarea[placeholder]").forEach(function(el){
-    const value=el.getAttribute("placeholder")||"";
-    if(value==="Contoh: Adiimasa store")el.setAttribute("placeholder",language==="en" ? "Example: Adiimasa store" : value);
-  });
+    const select=document.getElementById("operatorLanguage");
+    if(select && select.value!==language)select.value=language;
 
-  document.querySelectorAll("option").forEach(function(el){
-    const value=el.textContent.trim();
-    const translated=sellerBooksOperatorTranslateExact(value);
-    if(translated!==value)el.textContent=translated;
-  });
+    const label=document.getElementById("operatorLanguageLabel");
+    if(label)label.textContent=language==="en" ? "Language" : "Bahasa";
 
-  const walker=document.createTreeWalker(document.body,NodeFilter.SHOW_TEXT);
-  const nodes=[];
-  while(walker.nextNode())nodes.push(walker.currentNode);
-  nodes.forEach(function(node){
-    const original=node.nodeValue;
-    const trimmed=String(original||"").replace(/\s+/g," ").trim();
-    if(!trimmed)return;
-    const translated=sellerBooksOperatorTranslateExact(trimmed);
-    if(translated!==trimmed){
-      const lead=original.match(/^\s*/)?.[0]||"";
-      const tail=original.match(/\s*$/)?.[0]||"";
-      node.nodeValue=lead+translated+tail;
-    }
-  });
+    const subtitle=document.getElementById("operatorLoginBrandSubtitle");
+    if(subtitle)subtitle.textContent=language==="en" ? "SALES IMPORT" : "IMPORT PENJUALAN";
+
+    document.querySelectorAll("input[placeholder],textarea[placeholder]").forEach(function(el){
+      if(!sellerBooksOperatorOriginalPlaceholders.has(el)){
+        sellerBooksOperatorOriginalPlaceholders.set(el,el.getAttribute("placeholder")||"");
+      }
+      const source=sellerBooksOperatorOriginalPlaceholders.get(el);
+      if(source==="Contoh: Adiimasa store"){
+        el.setAttribute("placeholder",language==="en" ? "Example: Adiimasa store" : source);
+      }
+    });
+
+    document.querySelectorAll("option").forEach(function(el){
+      if(!sellerBooksOperatorOriginalOptions.has(el)){
+        sellerBooksOperatorOriginalOptions.set(el,el.textContent);
+      }
+      const source=String(sellerBooksOperatorOriginalOptions.get(el)||"");
+      const trimmed=source.trim();
+      if(!trimmed)return;
+      const translated=sellerBooksOperatorTranslateExact(trimmed);
+      if(translated!==trimmed){
+        const lead=source.match(/^\s*/)?.[0]||"";
+        const tail=source.match(/\s*$/)?.[0]||"";
+        el.textContent=lead+translated+tail;
+      }else if(el.textContent!==source){
+        el.textContent=source;
+      }
+    });
+
+    const walker=document.createTreeWalker(document.body,NodeFilter.SHOW_TEXT);
+    const nodes=[];
+    while(walker.nextNode())nodes.push(walker.currentNode);
+    nodes.forEach(function(node){
+      if(!sellerBooksOperatorOriginalTextNodes.has(node)){
+        sellerBooksOperatorOriginalTextNodes.set(node,node.nodeValue||"");
+      }
+      const source=String(sellerBooksOperatorOriginalTextNodes.get(node)||"");
+      const trimmed=source.replace(/\s+/g," ").trim();
+      if(!trimmed)return;
+      const translated=sellerBooksOperatorTranslateExact(trimmed);
+      const lead=source.match(/^\s*/)?.[0]||"";
+      const tail=source.match(/\s*$/)?.[0]||"";
+      const nextValue=lead+translated+tail;
+      if(node.nodeValue!==nextValue)node.nodeValue=nextValue;
+    });
+  }finally{
+    sellerBooksOperatorApplyingLanguage=false;
+  }
 }
 function sellerBooksOperatorStartLanguageObserver(){
   if(sellerBooksOperatorLanguageObserver)return;
   sellerBooksOperatorLanguageObserver=new MutationObserver(function(){
-    sellerBooksOperatorApplyLanguage();
+    if(sellerBooksOperatorApplyingLanguage)return;
+    sellerBooksOperatorLanguageObserver.disconnect();
+    try{
+      sellerBooksOperatorApplyLanguage();
+    }finally{
+      sellerBooksOperatorLanguageObserver.observe(document.body,{subtree:true,childList:true});
+    }
   });
-  sellerBooksOperatorLanguageObserver.observe(document.body,{subtree:true,childList:true,characterData:true});
+  sellerBooksOperatorLanguageObserver.observe(document.body,{subtree:true,childList:true});
 }
 async function sellerBooksOperatorLoadLanguage(){
   if(!sellerBooksAuthUser?.id)return;
