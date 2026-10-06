@@ -4614,6 +4614,13 @@ async function operatorInit(){
   sellerBooksAuthUser=data.session.user;
   operatorShowLogin();
   await checkOperatorApproval();
+
+  // Bahasa disinkronkan setelah alur login/approval selesai.
+  // Tidak menjadi syarat login dan tidak mengubah callback Auth.
+  sellerBooksOperatorEnsureLanguageAfterAuth()
+    .catch(function(error){
+      console.warn("Operator language sync failed:",error);
+    });
 }
 async function sellerBooksLogout(){
   try{await sellerBooksEnsureSupabase();}catch(e){}
@@ -5581,7 +5588,7 @@ SELLERBOOKS OPERATOR LANGUAGE
 - Tidak terkait Gmail/email sebagai penyimpan preferensi.
 =========================================================
 */
-const SELLERBOOKS_OPERATOR_LANGUAGE_TABLE="sellerbooks_operator_language_settings";
+const SELLERBOOKS_OPERATOR_LANGUAGE_TABLE="sellerbooks_user_language";
 const SELLERBOOKS_OPERATOR_LANGUAGE_KEY="sellerbooks_operator_language";
 const SELLERBOOKS_OPERATOR_LANGUAGE_TOUCHED_KEY="sellerbooks_operator_language_touched";
 const SELLERBOOKS_OPERATOR_DEFAULT_LANGUAGE="id";
@@ -5792,71 +5799,99 @@ function sellerBooksOperatorStartLanguageObserver(){
   sellerBooksOperatorLanguageObserver.observe(document.body,{subtree:true,childList:true,characterData:true});
 }
 async function sellerBooksOperatorLoadLanguage(){
+  if(!sellerBooksAuthUser?.id)return;
   await sellerBooksEnsureSupabase();
   try{
     const {data,error}=await sellerBooksSupabase
       .from(SELLERBOOKS_OPERATOR_LANGUAGE_TABLE)
       .select("language")
-      .eq("id",1)
+      .eq("user_id",sellerBooksAuthUser.id)
       .maybeSingle();
     if(error)throw error;
-    sellerBooksOperatorLanguage=sellerBooksOperatorNormalizeLanguage(data?.language||SELLERBOOKS_OPERATOR_DEFAULT_LANGUAGE);
-    sellerBooksOperatorLanguageReady=true;
-    sellerBooksOperatorLanguageCommitted=!!data;
+    if(data?.language){
+      sellerBooksOperatorLanguage=sellerBooksOperatorNormalizeLanguage(data.language);
+      sellerBooksOperatorLanguageReady=true;
+      sellerBooksOperatorLanguageCommitted=true;
+      try{
+        localStorage.setItem(SELLERBOOKS_OPERATOR_LANGUAGE_KEY,sellerBooksOperatorLanguage);
+        localStorage.removeItem(SELLERBOOKS_OPERATOR_LANGUAGE_TOUCHED_KEY);
+      }catch(error){}
+      sellerBooksOperatorApplyLanguage();
+      return;
+    }
   }catch(error){
-    sellerBooksOperatorLanguage=SELLERBOOKS_OPERATOR_DEFAULT_LANGUAGE;
-    sellerBooksOperatorLanguageReady=true;
-    sellerBooksOperatorLanguageCommitted=false;
     console.warn("Operator language load failed:",error);
   }
+
+  sellerBooksOperatorLanguageReady=true;
   sellerBooksOperatorApplyLanguage();
 }
 async function sellerBooksOperatorSaveLanguage(value){
   const language=sellerBooksOperatorNormalizeLanguage(value);
   sellerBooksOperatorLanguage=language;
   sellerBooksOperatorLanguageReady=true;
+
   try{
     localStorage.setItem(SELLERBOOKS_OPERATOR_LANGUAGE_KEY,language);
     localStorage.setItem(SELLERBOOKS_OPERATOR_LANGUAGE_TOUCHED_KEY,"1");
   }catch(error){}
   sellerBooksOperatorApplyLanguage();
 
+  // Pra-login: hanya simpan handoff lokal. Tidak menyentuh Auth/approval.
+  if(!sellerBooksAuthUser?.id)return;
+
   try{
     await sellerBooksEnsureSupabase();
-    const {error:updateError}=await sellerBooksSupabase
+    const {error:saveError}=await sellerBooksSupabase
       .from(SELLERBOOKS_OPERATOR_LANGUAGE_TABLE)
-      .update({language:language,updated_at:new Date().toISOString()})
-      .eq("id",1);
-    if(updateError)throw updateError;
+      .upsert({
+        user_id:sellerBooksAuthUser.id,
+        language:language,
+        updated_at:new Date().toISOString()
+      },{onConflict:"user_id"});
+    if(saveError)throw saveError;
 
     const {data:verifyData,error:verifyError}=await sellerBooksSupabase
       .from(SELLERBOOKS_OPERATOR_LANGUAGE_TABLE)
       .select("language")
-      .eq("id",1)
+      .eq("user_id",sellerBooksAuthUser.id)
       .maybeSingle();
     if(verifyError)throw verifyError;
     if(!verifyData || sellerBooksOperatorNormalizeLanguage(verifyData.language)!==language){
       throw new Error("Operator language persistence verification failed.");
     }
+
     sellerBooksOperatorLanguageCommitted=true;
-    localStorage.removeItem(SELLERBOOKS_OPERATOR_LANGUAGE_KEY);
-    localStorage.removeItem(SELLERBOOKS_OPERATOR_LANGUAGE_TOUCHED_KEY);
+    try{localStorage.removeItem(SELLERBOOKS_OPERATOR_LANGUAGE_TOUCHED_KEY);}catch(error){}
   }catch(error){
     sellerBooksOperatorLanguageCommitted=false;
     console.warn("Operator language save failed:",error);
   }
 }
 async function sellerBooksOperatorEnsureLanguageAfterAuth(){
-  await sellerBooksEnsureSupabase();
+  if(!sellerBooksAuthUser?.id)return;
+
   let touched=false;
   try{touched=localStorage.getItem(SELLERBOOKS_OPERATOR_LANGUAGE_TOUCHED_KEY)==="1";}catch(error){}
+
   if(touched){
     let selected=SELLERBOOKS_OPERATOR_DEFAULT_LANGUAGE;
     try{selected=sellerBooksOperatorNormalizeLanguage(localStorage.getItem(SELLERBOOKS_OPERATOR_LANGUAGE_KEY));}catch(error){}
     await sellerBooksOperatorSaveLanguage(selected);
     return;
   }
+
   await sellerBooksOperatorLoadLanguage();
+}
+function sellerBooksOperatorInitializeLocalLanguage(){
+  try{
+    const saved=localStorage.getItem(SELLERBOOKS_OPERATOR_LANGUAGE_KEY);
+    if(saved){
+      sellerBooksOperatorLanguage=sellerBooksOperatorNormalizeLanguage(saved);
+    }
+  }catch(error){}
+  sellerBooksOperatorLanguageReady=true;
+  sellerBooksOperatorApplyLanguage();
 }
 function sellerBooksSetOperatorLanguage(value){
   sellerBooksOperatorSaveLanguage(value).catch(function(error){
@@ -5878,9 +5913,9 @@ function sellerBooksOperatorInstallAlertTranslation(){
   window.alert=window.sellerBooksAlert;
 }
 
-window.addEventListener("load",async function(){
+window.addEventListener("load",function(){
   try{
-    await sellerBooksOperatorLoadLanguage();
+    sellerBooksOperatorInitializeLocalLanguage();
     sellerBooksOperatorStartLanguageObserver();
     sellerBooksOperatorInstallAlertTranslation();
   }catch(error){
