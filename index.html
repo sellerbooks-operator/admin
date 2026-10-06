@@ -4104,25 +4104,14 @@ async function sellerBooksEnsureSupabase(){
       if(session?.user){
         sellerBooksAuthUser=session.user;
         /*
-          Jangan melakukan operasi Supabase async langsung di dalam
-          onAuthStateChange. Tunda ke macrotask berikutnya agar lock Auth
-          selesai terlebih dahulu.
+          Sama seperti alur SellerBooks Admin:
+          onAuthStateChange hanya memperbarui identitas dan menjadwalkan
+          pemeriksaan approval. Tidak ada query Supabase bahasa di dalam
+          callback Auth karena supabase-js dapat deadlock bila API async
+          dipanggil dari onAuthStateChange.
         */
         operatorShowLogin();
         setTimeout(function(){
-          /*
-            Bahasa dan approval berjalan terpisah.
-            Sinkronisasi bahasa tidak boleh menjadi syarat untuk
-            melanjutkan pemeriksaan approval/login.
-          */
-          sellerBooksOperatorEnsureLanguageAfterAuth()
-            .catch(function(error){
-              console.warn("Operator language auth sync failed:",error);
-            })
-            .finally(function(){
-              sellerBooksOperatorApplyLanguage();
-            });
-
           checkOperatorApproval();
         },0);
       }else{
@@ -4632,9 +4621,25 @@ async function operatorInit(){
   if(error){console.error(error);return operatorShowLogin();}
   if(!data?.session?.user)return operatorShowLogin();
   sellerBooksAuthUser=data.session.user;
-  await sellerBooksOperatorEnsureLanguageAfterAuth();
+
+  /*
+    Jangan menunggu sinkronisasi bahasa sebelum approval/login.
+    Mekanisme persistence bahasa tetap sama, tetapi prosesnya background
+    sehingga kegagalan/kelambatan bahasa tidak dapat membuat Operator stuck.
+  */
   sellerBooksOperatorApplyLanguage();
   operatorShowLogin();
+
+  setTimeout(function(){
+    sellerBooksOperatorEnsureLanguageAfterAuth()
+      .catch(function(error){
+        console.warn("Operator language auth sync failed:",error);
+      })
+      .finally(function(){
+        sellerBooksOperatorApplyLanguage();
+      });
+  },0);
+
   await checkOperatorApproval();
 }
 async function sellerBooksLogout(){
