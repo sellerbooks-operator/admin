@@ -4103,8 +4103,9 @@ async function sellerBooksEnsureSupabase(){
     sellerBooksSupabase.auth.onAuthStateChange((event,session)=>{
       if(session?.user){
         sellerBooksAuthUser=session.user;
-        operatorShowLogin();
-        setTimeout(()=>checkOperatorApproval(),0);
+        sellerBooksOperatorEnsureLanguageAfterAuth()
+          .catch(function(error){console.warn("Operator language auth sync failed:",error);})
+          .finally(function(){operatorShowLogin();setTimeout(()=>checkOperatorApproval(),0);});
       }else{
         sellerBooksStopOperatorIdentityGuard();
         sellerBooksAuthUser=null;
@@ -4612,6 +4613,8 @@ async function operatorInit(){
   if(error){console.error(error);return operatorShowLogin();}
   if(!data?.session?.user)return operatorShowLogin();
   sellerBooksAuthUser=data.session.user;
+  await sellerBooksOperatorEnsureLanguageAfterAuth();
+  sellerBooksOperatorApplyLanguage();
   operatorShowLogin();
   await checkOperatorApproval();
 }
@@ -5590,6 +5593,7 @@ let sellerBooksOperatorLanguageReady=false;
 let sellerBooksOperatorLanguageCommitted=false;
 let sellerBooksOperatorLanguageObserver=null;
 let sellerBooksOperatorOriginalAlert=null;
+let sellerBooksOperatorLanguageAuthSyncPromise=null;
 
 const SELLERBOOKS_OPERATOR_TRANSLATIONS={
   id:{
@@ -5735,7 +5739,17 @@ function sellerBooksOperatorTranslateExact(value){
   const language=sellerBooksOperatorCurrentLanguage();
   const source=String(value??"");
   if(!source.trim())return source;
-  return SELLERBOOKS_OPERATOR_TRANSLATIONS[language]?.[source] ?? source;
+  const direct=SELLERBOOKS_OPERATOR_TRANSLATIONS[language]?.[source];
+  if(direct!==undefined)return direct;
+
+  const otherLanguage=language==="en" ? "id" : "en";
+  const otherMap=SELLERBOOKS_OPERATOR_TRANSLATIONS[otherLanguage]||{};
+  const reverseKey=Object.keys(otherMap).find(function(key){
+    return otherMap[key]===source && SELLERBOOKS_OPERATOR_TRANSLATIONS[language]?.[key]!==undefined;
+  });
+  return reverseKey!==undefined
+    ? SELLERBOOKS_OPERATOR_TRANSLATIONS[language][reverseKey]
+    : source;
 }
 function sellerBooksOperatorTranslateMessage(value){
   let source=String(value??"");
@@ -5847,16 +5861,22 @@ async function sellerBooksOperatorSaveLanguage(value){
   }
 }
 async function sellerBooksOperatorEnsureLanguageAfterAuth(){
-  await sellerBooksEnsureSupabase();
-  let touched=false;
-  try{touched=localStorage.getItem(SELLERBOOKS_OPERATOR_LANGUAGE_TOUCHED_KEY)==="1";}catch(error){}
-  if(touched){
-    let selected=SELLERBOOKS_OPERATOR_DEFAULT_LANGUAGE;
-    try{selected=sellerBooksOperatorNormalizeLanguage(localStorage.getItem(SELLERBOOKS_OPERATOR_LANGUAGE_KEY));}catch(error){}
-    await sellerBooksOperatorSaveLanguage(selected);
-    return;
-  }
-  await sellerBooksOperatorLoadLanguage();
+  if(sellerBooksOperatorLanguageAuthSyncPromise)return sellerBooksOperatorLanguageAuthSyncPromise;
+  sellerBooksOperatorLanguageAuthSyncPromise=(async function(){
+    await sellerBooksEnsureSupabase();
+    let touched=false;
+    try{touched=localStorage.getItem(SELLERBOOKS_OPERATOR_LANGUAGE_TOUCHED_KEY)==="1";}catch(error){}
+    if(touched){
+      let selected=SELLERBOOKS_OPERATOR_DEFAULT_LANGUAGE;
+      try{selected=sellerBooksOperatorNormalizeLanguage(localStorage.getItem(SELLERBOOKS_OPERATOR_LANGUAGE_KEY));}catch(error){}
+      await sellerBooksOperatorSaveLanguage(selected);
+      return;
+    }
+    await sellerBooksOperatorLoadLanguage();
+  })().finally(function(){
+    sellerBooksOperatorLanguageAuthSyncPromise=null;
+  });
+  return sellerBooksOperatorLanguageAuthSyncPromise;
 }
 function sellerBooksSetOperatorLanguage(value){
   sellerBooksOperatorSaveLanguage(value).catch(function(error){
