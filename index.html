@@ -5698,6 +5698,13 @@ const SELLERBOOKS_OPERATOR_TRANSLATIONS={
     "Marketplace file belum dapat dikenali otomatis.":"The marketplace in the file could not be identified automatically.",
     "Silakan pilih akun toko terlebih dahulu sebelum menyimpan.":"Please select a store account before saving.",
     "Pilih akun toko terlebih dahulu.":"Please select a store account first.",
+    " akun toko aktif tersedia.":" active store accounts available.",
+    "Belum ada akun toko aktif untuk marketplace ini.":"No active store accounts are available for this marketplace.",
+    "Import berhasil disinkronkan ke SellerBooks.":"Import synchronized successfully to SellerBooks.",
+    "Transaksi baru:":"New transactions:",
+    "Transaksi dilewati karena sudah ada:":"Transactions skipped because they already exist:",
+    "QTY terproses:":"QTY processed:",
+    "Stok yang benar-benar berkurang:":"Stock actually deducted:",
     "Semua data pada file tersebut sudah pernah diinput sebelumnya.":"All data in this file has already been imported previously.",
     "Data penjualan gagal disimpan.":"Sales data could not be saved.",
     "Import berhasil disimpan ✓":"Import saved successfully ✓",
@@ -5870,7 +5877,7 @@ function sellerBooksOperatorStartLanguageObserver(){
     try{
       sellerBooksOperatorApplyLanguage();
     }finally{
-      sellerBooksOperatorLanguageObserver.observe(document.body,{subtree:true,childList:true});
+      sellerBooksOperatorLanguageObserver.observe(document.body,{subtree:true,childList:true,characterData:true});
     }
   });
   sellerBooksOperatorLanguageObserver.observe(document.body,{subtree:true,childList:true});
