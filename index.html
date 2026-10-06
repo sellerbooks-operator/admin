@@ -2779,12 +2779,11 @@ function renderSalesAnalysis(){
 
 
         skuConfidenceElement.innerText =
-
-            "Terdeteksi otomatis • " +
-
-            data.skuScore +
-
-            "% kecocokan";
+            sellerBooksOperatorTranslateMessage(
+                "Terdeteksi otomatis • " +
+                data.skuScore +
+                "% kecocokan"
+            );
 
 
     }
@@ -2840,12 +2839,11 @@ function renderSalesAnalysis(){
 
 
         qtyConfidenceElement.innerText =
-
-            "Terdeteksi otomatis • " +
-
-            data.qtyScore +
-
-            "% kecocokan";
+            sellerBooksOperatorTranslateMessage(
+                "Terdeteksi otomatis • " +
+                data.qtyScore +
+                "% kecocokan"
+            );
 
 
     }
@@ -4864,8 +4862,10 @@ function populateSalesStoreAccounts(){
         if(list.length){
 
             info.innerText =
-                list.length +
-                " akun toko aktif tersedia.";
+                sellerBooksOperatorTranslateMessage(
+                    list.length +
+                    " akun toko aktif tersedia."
+                );
 
             info.style.color =
                 "";
@@ -5554,7 +5554,7 @@ async function commitOperatorImport(){
    if(card)card.classList.add("show");
    const resultText=document.getElementById("importResultText");
    if(resultText){
-      resultText.innerHTML=`<div class="result-ok"><strong>✅ Import berhasil disinkronkan ke SellerBooks.</strong></div><div class="result-meta">Transaksi baru: <strong>${Number(result.new_transactions||0).toLocaleString("id-ID")}</strong><br>Transaksi dilewati karena sudah ada: <strong>${Number(result.skipped_transactions||0).toLocaleString("id-ID")}</strong><br>QTY terproses: <strong>${Number(result.total_qty||0).toLocaleString("id-ID")}</strong><br>Stok yang benar-benar berkurang: <strong>${Number(result.stock_deducted_qty||0).toLocaleString("id-ID")}</strong></div>`;
+      resultText.innerHTML=`<div class="result-ok"><strong>✅ ${sellerBooksOperatorTranslateMessage("Import berhasil disinkronkan ke SellerBooks.")}</strong></div><div class="result-meta">${sellerBooksOperatorTranslateMessage("Transaksi baru:")} <strong>${Number(result.new_transactions||0).toLocaleString("id-ID")}</strong><br>${sellerBooksOperatorTranslateMessage("Transaksi dilewati karena sudah ada:")} <strong>${Number(result.skipped_transactions||0).toLocaleString("id-ID")}</strong><br>${sellerBooksOperatorTranslateMessage("QTY terproses:")} <strong>${Number(result.total_qty||0).toLocaleString("id-ID")}</strong><br>${sellerBooksOperatorTranslateMessage("Stok yang benar-benar berkurang:")} <strong>${Number(result.stock_deducted_qty||0).toLocaleString("id-ID")}</strong></div>`;
    }
    closeSalesPreview();
    resetSalesImport();
@@ -5880,7 +5880,7 @@ function sellerBooksOperatorStartLanguageObserver(){
       sellerBooksOperatorLanguageObserver.observe(document.body,{subtree:true,childList:true,characterData:true});
     }
   });
-  sellerBooksOperatorLanguageObserver.observe(document.body,{subtree:true,childList:true});
+  sellerBooksOperatorLanguageObserver.observe(document.body,{subtree:true,childList:true,characterData:true});
 }
 async function sellerBooksOperatorLoadLanguage(){
   if(!sellerBooksAuthUser?.id)return;
